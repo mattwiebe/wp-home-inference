@@ -52,6 +52,13 @@ From [`local/`](local):
 node server.mjs init
 ```
 
+If you want to test the npm-style CLI interface locally from the repo root, use:
+
+```bash
+node bin/wp-home-inference.mjs init
+node bin/wp-home-inference.mjs up
+```
+
 That guided setup will:
 
 - detect or prompt for the backend URL,
@@ -127,13 +134,25 @@ npm test
 Build a release ZIP locally:
 
 ```bash
-npm run build
+npm run build:plugin
 ```
 
 That creates:
 
 ```text
-dist/wp-home-inference.zip
+dist/wp-home-inference-plugin.zip
+```
+
+Build the npm package tarball locally:
+
+```bash
+npm run build:npm
+```
+
+That creates:
+
+```text
+dist/mattwiebe-wp-home-inference-<version>.tgz
 ```
 
 ## GitHub Automation
@@ -145,8 +164,45 @@ This repository ships with GitHub Actions workflows for:
   - Node syntax check + Node tests
 - Release packaging on tags matching `v*`
   - runs the full test suite,
-  - builds `dist/wp-home-inference.zip`,
-  - uploads the ZIP to the GitHub release.
+  - builds the WordPress plugin ZIP and npm tarball,
+  - uploads both artifacts to the GitHub release.
+
+## npm Package
+
+The npm package name is:
+
+```text
+@mattwiebe/wp-home-inference
+```
+
+Once published, the intended entrypoint is:
+
+```bash
+npx @mattwiebe/wp-home-inference up
+npx @mattwiebe/wp-home-inference init
+```
+
+The npm CLI stores its persistent config in:
+
+```text
+~/.config/wp-home-inference/.env
+```
+
+That keeps `npx` usage stateful across runs instead of writing config into a temporary install directory.
+
+## Publishing To npm
+
+Based on npm’s current docs for scoped public packages, the publish flow is:
+
+1. Create or sign in to your npm account with `npm login`.
+2. Make sure the package name is available:
+   `npm view @mattwiebe/wp-home-inference`
+3. Inspect exactly what would be published:
+   `npm pack --dry-run`
+4. Publish the first version:
+   `npm publish`
+
+This repo already sets `publishConfig.access` to `public`, which is the required setting for a public scoped package according to npm’s docs.
 
 ## Current Status
 

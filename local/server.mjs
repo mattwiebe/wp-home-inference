@@ -29,7 +29,7 @@
 import { createServer } from 'node:http';
 import { randomBytes } from 'node:crypto';
 import { execFileSync, execFile } from 'node:child_process';
-import { existsSync, readFileSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { createInterface } from 'node:readline';
 import { fileURLToPath } from 'node:url';
@@ -52,7 +52,7 @@ function hasFlag( name ) {
 
 const IS_INIT  = 'init' === process.argv[ 2 ];
 const SCRIPT_DIR = dirname( fileURLToPath( import.meta.url ) );
-const ENV_PATH   = join( SCRIPT_DIR, '.env' );
+const ENV_PATH   = process.env.WP_HOME_INFERENCE_ENV_PATH || join( SCRIPT_DIR, '.env' );
 const PORT_ARG            = arg( 'port', '' );
 const FUNNEL_PORT_ARG     = arg( 'funnel-port', '' );
 const BACKEND_ARG         = arg( 'backend', '' );
@@ -129,6 +129,8 @@ function envValue( value ) {
 }
 
 function writeConfig( config ) {
+	mkdirSync( dirname( ENV_PATH ), { recursive: true } );
+
 	const contents = [
 		'# Home Inference local configuration',
 		`PORT=${ envValue( config.port ) }`,
@@ -418,9 +420,9 @@ async function runInit() {
 		process.exit( 1 );
 	}
 
-	writeConfig( config );
+		writeConfig( config );
 
-	console.log( `  Saved configuration to ${ ENV_PATH }` );
+		console.log( `  Saved configuration to ${ ENV_PATH }` );
 	console.log( '' );
 
 	return config;

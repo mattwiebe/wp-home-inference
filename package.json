@@ -1,11 +1,38 @@
 {
-  "name": "wp-home-inference",
+  "name": "@mattwiebe/wp-home-inference",
   "version": "0.1.0",
-  "private": true,
+  "description": "CLI and WordPress plugin for routing AI inference to models running on your own machine.",
   "type": "module",
+  "bin": {
+    "wp-home-inference": "bin/wp-home-inference.mjs"
+  },
+  "files": [
+    "bin/wp-home-inference.mjs",
+    "local/server.mjs",
+    "README.md"
+  ],
   "scripts": {
-    "lint": "node --check local/server.mjs",
+    "lint": "node --check bin/wp-home-inference.mjs && node --check local/server.mjs",
     "test": "node --test",
-    "build": "bash scripts/build-release.sh"
+    "build": "npm run build:plugin && npm run build:npm",
+    "build:plugin": "bash scripts/build-plugin-zip.sh",
+    "build:npm": "bash scripts/build-npm-tarball.sh",
+    "publish:npm": "npm publish",
+    "prepublishOnly": "npm run lint && npm test"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mattwiebe/wp-home-inference.git"
+  },
+  "bugs": {
+    "url": "https://github.com/mattwiebe/wp-home-inference/issues"
+  },
+  "homepage": "https://github.com/mattwiebe/wp-home-inference#readme",
+  "license": "GPL-2.0-or-later",
+  "engines": {
+    "node": ">=20"
   }
 }
