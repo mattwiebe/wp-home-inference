@@ -1,6 +1,6 @@
 {
   "name": "@mattwiebe/wp-home-inference",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "description": "CLI and WordPress plugin for routing AI inference to models running on your own machine.",
   "type": "module",
   "bin": {
