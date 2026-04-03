@@ -73,11 +73,16 @@ jobs:
           files: dist/*
 
       - name: Notify Packagist
-        if: startsWith(github.ref, 'refs/tags/') && secrets.PACKAGIST_USERNAME != '' && secrets.PACKAGIST_API_TOKEN != ''
+        if: startsWith(github.ref, 'refs/tags/')
         env:
           PACKAGIST_USERNAME: ${{ secrets.PACKAGIST_USERNAME }}
           PACKAGIST_API_TOKEN: ${{ secrets.PACKAGIST_API_TOKEN }}
         run: |
+          if [ -z "${PACKAGIST_USERNAME}" ] || [ -z "${PACKAGIST_API_TOKEN}" ]; then
+            echo "Packagist secrets not configured; skipping notification."
+            exit 0
+          fi
+
           curl --fail --show-error --silent \
             -X POST \
             -H 'content-type: application/json' \
