@@ -196,7 +196,23 @@ This repository ships with GitHub Actions workflows for:
 - Release packaging on tags matching `v*`
   - runs the full test suite,
   - builds the WordPress plugin ZIP and npm tarball,
-- uploads both artifacts to the GitHub release.
+  - uploads both artifacts to the GitHub release.
+
+To cut a release:
+
+1. Make sure `package.json` and the plugin header version are aligned.
+2. Create and push a semver tag like `v0.1.4`.
+3. GitHub Actions will build:
+   - `dist/wp-home-inference-plugin.zip`
+   - `dist/mattwiebe-wp-home-inference-<version>.tgz`
+4. The workflow will attach both files to the GitHub release automatically.
+
+For Packagist auto-refresh after tag pushes, add these repository secrets in GitHub:
+
+- `PACKAGIST_USERNAME`
+- `PACKAGIST_API_TOKEN`
+
+The release workflow will call Packagist's documented update endpoint after publishing the GitHub release. Reference: [Packagist update hooks](https://packagist.org/about#how-to-update-packages).
 
 ## Composer / Packagist
 
