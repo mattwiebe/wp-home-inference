@@ -182,6 +182,16 @@ npx @mattwiebe/wp-home-inference up
 npx @mattwiebe/wp-home-inference init
 ```
 
+It also supports global installation:
+
+```bash
+npm install -g @mattwiebe/wp-home-inference
+wphi init
+wphi up
+```
+
+The package also exposes `wp-home-inference` as a longer alias, but `wphi` is the intended global command.
+
 The npm CLI stores its persistent config in:
 
 ```text

@@ -4,6 +4,7 @@
   "description": "CLI and WordPress plugin for routing AI inference to models running on your own machine.",
   "type": "module",
   "bin": {
+    "wphi": "bin/wp-home-inference.mjs",
     "wp-home-inference": "bin/wp-home-inference.mjs"
   },
   "files": [
