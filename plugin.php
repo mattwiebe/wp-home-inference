@@ -5,7 +5,7 @@
  * Description: AI provider that routes inference to local models running on your home computer.
  * Requires at least: 7.0
  * Requires PHP: 7.4
- * Version: 0.1.0
+ * Version: 0.1.4
  * Author: Matt
  * License: GPL-2.0-or-later
  * License URI: https://spdx.org/licenses/GPL-2.0-or-later.html

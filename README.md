@@ -196,7 +196,60 @@ This repository ships with GitHub Actions workflows for:
 - Release packaging on tags matching `v*`
   - runs the full test suite,
   - builds the WordPress plugin ZIP and npm tarball,
-  - uploads both artifacts to the GitHub release.
+- uploads both artifacts to the GitHub release.
+
+## Composer / Packagist
+
+This repository is ready to be consumed as a Composer package from Packagist or directly from GitHub.
+
+The package name is:
+
+```text
+mattwiebe/wp-home-inference
+```
+
+It uses Composer package type `wordpress-plugin`, so Composer-based WordPress projects can install it into `wp-content/plugins` when the root project uses `composer/installers` with the usual installer paths.
+
+Example root project setup:
+
+```json
+{
+  "require": {
+    "composer/installers": "^2.3",
+    "mattwiebe/wp-home-inference": "^0.1"
+  },
+  "extra": {
+    "installer-paths": {
+      "wp-content/plugins/{$name}/": ["type:wordpress-plugin"]
+    }
+  }
+}
+```
+
+If you want to consume it directly from GitHub before Packagist metadata refreshes or before tagging, add a VCS repository in the root project:
+
+```json
+{
+  "repositories": [
+    {
+      "type": "vcs",
+      "url": "https://github.com/mattwiebe/wp-home-inference"
+    }
+  ]
+}
+```
+
+## WP Packages Compatibility
+
+[WP Packages](https://wp-packages.org/docs) mirrors active plugins and themes from the WordPress.org directory under names like `wp-plugin/plugin-name`. Because Home Inference is hosted on GitHub and is not currently in the WordPress.org plugin directory, it will not appear there yet.
+
+The repo is still compatible with the same Composer install flow described in the WP Packages docs:
+
+- it uses Composer package type `wordpress-plugin`
+- it sets a stable installer name of `wp-home-inference`
+- it works with the same root-level `composer/installers` configuration used for WP Packages packages
+
+So the practical path today is `mattwiebe/wp-home-inference` via Packagist or a VCS repository. If the plugin is later published to WordPress.org, then a WP Packages entry would become possible under a `wp-plugin/...` package name.
 
 ## npm Package
 
