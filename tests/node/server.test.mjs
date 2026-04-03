@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 
 import {
 	buildPublicUrl,
+	FUNNEL_PORT_CHOICES,
 	hasUsableConfig,
 	parseBooleanEnv,
 	parseEnvFile,
@@ -27,6 +28,11 @@ NO_TUNNEL=1
 test( 'buildPublicUrl omits port 443 and includes non-default public ports', () => {
 	assert.equal( buildPublicUrl( 'wiebook.tail7a347e.ts.net', 443 ), 'https://wiebook.tail7a347e.ts.net' );
 	assert.equal( buildPublicUrl( 'wiebook.tail7a347e.ts.net', 8443 ), 'https://wiebook.tail7a347e.ts.net:8443' );
+} );
+
+test( 'default funnel choice is 8443', () => {
+	assert.equal( FUNNEL_PORT_CHOICES[0].port, 8443 );
+	assert.equal( FUNNEL_PORT_CHOICES[0].label, '8443 (default)' );
 } );
 
 test( 'hasUsableConfig requires backend URL and API key', () => {

@@ -460,10 +460,12 @@ function render_admin_page(): void {
 				?>
 			</p>
 
-			<h3><?php esc_html_e( 'Step 3: Start the Home Inference proxy', 'wp-home-inference' ); ?></h3>
-			<p><?php esc_html_e( 'On your home computer, copy the local/ directory from this plugin and run:', 'wp-home-inference' ); ?></p>
-			<?php render_copyable_command( 'node server.mjs' ); ?>
-			<p class="description"><?php esc_html_e( 'The proxy will auto-detect your inference backend, start a Tailscale Funnel, and display the public URL and API key.', 'wp-home-inference' ); ?></p>
+			<h3><?php esc_html_e( 'Step 3: Install and start the Home Inference proxy', 'wp-home-inference' ); ?></h3>
+			<p><?php esc_html_e( 'On your home computer, install the published CLI and run the setup command:', 'wp-home-inference' ); ?></p>
+			<?php render_copyable_command( 'npm install -g @mattwiebe/wp-home-inference && wphi init' ); ?>
+			<p class="description"><?php esc_html_e( 'This will configure the proxy, auto-detect your inference backend, optionally start a Tailscale Funnel, and save your local settings for future runs.', 'wp-home-inference' ); ?></p>
+			<p><?php esc_html_e( 'After setup, start the proxy any time with:', 'wp-home-inference' ); ?></p>
+			<?php render_copyable_command( 'wphi up' ); ?>
 
 			<h3><?php esc_html_e( 'Step 4: Enter the connection details below', 'wp-home-inference' ); ?></h3>
 			<p><?php esc_html_e( 'Copy the Endpoint URL and API Key shown by the proxy into the form below.', 'wp-home-inference' ); ?></p>
@@ -546,7 +548,7 @@ function render_admin_page(): void {
 		<div class="card" style="max-width: 720px;">
 			<h2><?php esc_html_e( 'Server Info', 'wp-home-inference' ); ?></h2>
 			<p class="description"><?php esc_html_e( 'Your local proxy should be started with:', 'wp-home-inference' ); ?></p>
-			<?php render_copyable_command( 'node server.mjs' ); ?>
+			<?php render_copyable_command( 'wphi up' ); ?>
 		</div>
 		<?php endif; ?>
 

@@ -58,7 +58,12 @@ const FUNNEL_PORT_ARG     = arg( 'funnel-port', '' );
 const BACKEND_ARG         = arg( 'backend', '' );
 const API_KEY_ARG         = arg( 'api-key', '' );
 const NO_TUNNEL_FLAG      = hasFlag( 'no-tunnel' );
-const ALLOWED_FUNNEL_PORTS = [ 443, 8443, 10000 ];
+const FUNNEL_PORT_CHOICES = [
+	{ port: 8443, label: '8443 (default)' },
+	{ port: 443, label: '443' },
+	{ port: 10000, label: '10000' },
+];
+const ALLOWED_FUNNEL_PORTS = FUNNEL_PORT_CHOICES.map( ( choice ) => choice.port );
 let PORT = 13531;
 let BACKEND = '';
 let API_KEY = '';
@@ -295,16 +300,12 @@ async function resolveFunnelPort() {
 	console.log( '  Choose a public Tailscale Funnel port:' );
 	console.log( '' );
 
-	const choices = [
-		'8443 (default)',
-		'443',
-		'10000',
-	];
+	const choices = FUNNEL_PORT_CHOICES.map( ( choice ) => choice.label );
 
 	const idx = await promptChoice( '  Which public HTTPS port? [1]: ', choices, 0 );
 	console.log( '' );
 
-	return ALLOWED_FUNNEL_PORTS[ idx ];
+	return FUNNEL_PORT_CHOICES[ idx ].port;
 }
 
 /**
@@ -683,6 +684,7 @@ if ( IS_DIRECT_RUN ) {
 
 export {
 	buildPublicUrl,
+	FUNNEL_PORT_CHOICES,
 	getEffectiveConfig,
 	hasUsableConfig,
 	parseBooleanEnv,
