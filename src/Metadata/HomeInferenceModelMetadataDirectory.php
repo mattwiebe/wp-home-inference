@@ -31,6 +31,21 @@ class HomeInferenceModelMetadataDirectory extends AbstractOpenAiCompatibleModelM
 	/**
 	 * {@inheritDoc}
 	 *
+	 * Include the current endpoint and selected model in the cache key so model
+	 * selection changes do not leave stale filtered metadata behind.
+	 *
+	 * @since 0.1.0
+	 */
+	protected function getBaseCacheKey(): string {
+		$endpoint_url = untrailingslashit( (string) get_option( 'home_inference_endpoint_url', '' ) );
+		$selected_model_id = (string) get_option( 'home_inference_model_id', '' );
+
+		return parent::getBaseCacheKey() . '_' . md5( $endpoint_url . '|' . $selected_model_id );
+	}
+
+	/**
+	 * {@inheritDoc}
+	 *
 	 * @since 0.1.0
 	 */
 	protected function createRequest(
@@ -82,6 +97,7 @@ class HomeInferenceModelMetadataDirectory extends AbstractOpenAiCompatibleModelM
 		);
 
 		$models = array();
+		$matched_models = array();
 		$selected_model_id = trim( (string) get_option( 'home_inference_model_id', '' ) );
 
 		foreach ( (array) $responseData['data'] as $model_data ) {
@@ -89,16 +105,22 @@ class HomeInferenceModelMetadataDirectory extends AbstractOpenAiCompatibleModelM
 				continue;
 			}
 
-			if ( '' !== $selected_model_id && $selected_model_id !== $model_data['id'] ) {
-				continue;
-			}
-
-			$models[] = new ModelMetadata(
+			$model = new ModelMetadata(
 				$model_data['id'],
 				$model_data['id'],
 				$capabilities,
 				$options
 			);
+
+			$models[] = $model;
+
+			if ( '' !== $selected_model_id && $selected_model_id === $model_data['id'] ) {
+				$matched_models[] = $model;
+			}
+		}
+
+		if ( '' !== $selected_model_id && ! empty( $matched_models ) ) {
+			return $matched_models;
 		}
 
 		return $models;

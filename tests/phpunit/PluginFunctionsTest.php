@@ -6,6 +6,8 @@ namespace WordPress\HomeInference\Tests\PHPUnit;
 
 use WP_Error;
 use WP_UnitTestCase;
+use WordPress\AiClient\Providers\Http\DTO\Response;
+use WordPress\HomeInference\Metadata\HomeInferenceModelMetadataDirectory;
 use function WordPress\HomeInference\fetch_proxy_models;
 use function WordPress\HomeInference\sanitize_api_key;
 use function WordPress\HomeInference\sanitize_model_id;
@@ -139,5 +141,37 @@ final class PluginFunctionsTest extends WP_UnitTestCase {
 		$this->assertSame( '', sanitize_model_id( 'unknown-model' ) );
 
 		remove_all_filters( 'pre_http_request' );
+	}
+
+	public function test_model_directory_falls_back_to_available_models_when_selected_model_is_missing(): void {
+		if ( ! class_exists( \WordPress\AiClient\Providers\OpenAiCompatibleImplementation\AbstractOpenAiCompatibleModelMetadataDirectory::class ) ) {
+			$this->markTestSkipped( 'WordPress AI Client model metadata directory classes are not available in this test environment.' );
+		}
+
+		update_option( 'home_inference_model_id', 'missing-model' );
+
+		$directory = new HomeInferenceModelMetadataDirectory();
+		$reflection = new \ReflectionMethod( $directory, 'parseResponseToModelMetadataList' );
+		$reflection->setAccessible( true );
+
+		$response = new Response(
+			200,
+			array(
+				'content-type' => 'application/json',
+			),
+			wp_json_encode(
+				array(
+					'data' => array(
+						array( 'id' => 'llama3.2' ),
+						array( 'id' => 'qwen2.5' ),
+					),
+				)
+			)
+		);
+
+		$models = $reflection->invoke( $directory, $response );
+
+		$this->assertCount( 2, $models );
+		$this->assertSame( array( 'llama3.2', 'qwen2.5' ), wp_list_pluck( $models, 'id' ) );
 	}
 }
