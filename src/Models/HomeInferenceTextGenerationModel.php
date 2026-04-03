@@ -5,8 +5,11 @@ declare(strict_types=1);
 namespace WordPress\HomeInference\Models;
 
 use WordPress\AiClient\Providers\Http\DTO\Request;
+use WordPress\AiClient\Providers\Http\DTO\RequestOptions;
 use WordPress\AiClient\Providers\Http\Enums\HttpMethodEnum;
 use WordPress\AiClient\Providers\OpenAiCompatibleImplementation\AbstractOpenAiCompatibleTextGenerationModel;
+use WordPress\AiClient\Providers\DTO\ProviderMetadata;
+use WordPress\AiClient\Providers\Models\DTO\ModelMetadata;
 use WordPress\HomeInference\Provider\HomeInferenceProvider;
 
 /**
@@ -18,6 +21,28 @@ use WordPress\HomeInference\Provider\HomeInferenceProvider;
  * @since 0.1.0
  */
 class HomeInferenceTextGenerationModel extends AbstractOpenAiCompatibleTextGenerationModel {
+
+	/**
+	 * Constructor.
+	 *
+	 * Local inference on consumer hardware can take significantly longer than
+	 * cloud APIs to produce the first response bytes, so we apply a longer
+	 * default transport timeout for generation requests.
+	 *
+	 * @since 0.1.0
+	 *
+	 * @param ModelMetadata    $modelMetadata    The model metadata.
+	 * @param ProviderMetadata $providerMetadata The provider metadata.
+	 */
+	public function __construct( ModelMetadata $modelMetadata, ProviderMetadata $providerMetadata ) {
+		parent::__construct( $modelMetadata, $providerMetadata );
+
+		$request_options = new RequestOptions();
+		$request_options->setConnectTimeout( 10.0 );
+		$request_options->setTimeout( 300.0 );
+
+		$this->setRequestOptions( $request_options );
+	}
 
 	/**
 	 * {@inheritDoc}
