@@ -10,22 +10,36 @@ jobs:
   php:
     name: PHP
     runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        php-version: ['8.2', '8.3']
+    services:
+      mysql:
+        image: mariadb:10.11
+        env:
+          MYSQL_ROOT_PASSWORD: root
+          MYSQL_DATABASE: wordpress_test
+        ports:
+          - 3306:3306
+        options: --health-cmd="mysqladmin ping -proot" --health-interval=10s --health-timeout=10s --health-retries=10
     steps:
       - uses: actions/checkout@v4
 
+      - name: Install svn
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y subversion
+
       - uses: shivammathur/setup-php@v2
         with:
-          php-version: ${{ matrix.php-version }}
+          php-version: '8.5'
           coverage: none
+          extensions: mysql
 
       - uses: ramsey/composer-install@v3
 
       - name: Lint PHP
         run: composer lint
+
+      - name: Install WordPress test suite
+        run: composer test:install-wp
 
       - name: Run PHP tests
         run: composer test
@@ -44,9 +58,6 @@ jobs:
         with:
           node-version: ${{ matrix.node-version }}
           cache: npm
-
-      - name: Install dependencies
-        run: npm ci
 
       - name: Lint Node
         run: npm run lint

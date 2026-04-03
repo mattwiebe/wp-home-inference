@@ -107,6 +107,14 @@ composer install
 npm ci
 ```
 
+Install the WordPress PHPUnit test suite:
+
+```bash
+composer test:install-wp
+```
+
+The PHP tests use the real WordPress test framework and `WP_UnitTestCase`, so they need a local MySQL database plus the WordPress test library installed by that script.
+
 Run the local checks:
 
 ```bash
@@ -133,7 +141,7 @@ dist/wp-home-inference.zip
 This repository ships with GitHub Actions workflows for:
 
 - CI on pushes and pull requests
-  - PHP lint + PHPUnit
+  - PHP lint + real WordPress `WP_UnitTestCase` tests
   - Node syntax check + Node tests
 - Release packaging on tags matching `v*`
   - runs the full test suite,

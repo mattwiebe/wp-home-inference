@@ -10,13 +10,28 @@ jobs:
   build-release:
     name: Build Release
     runs-on: ubuntu-latest
+    services:
+      mysql:
+        image: mariadb:10.11
+        env:
+          MYSQL_ROOT_PASSWORD: root
+          MYSQL_DATABASE: wordpress_test
+        ports:
+          - 3306:3306
+        options: --health-cmd="mysqladmin ping -proot" --health-interval=10s --health-timeout=10s --health-retries=10
     steps:
       - uses: actions/checkout@v4
 
+      - name: Install svn
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y subversion
+
       - uses: shivammathur/setup-php@v2
         with:
-          php-version: '8.3'
+          php-version: '8.5'
           coverage: none
+          extensions: mysql
 
       - uses: ramsey/composer-install@v3
 
@@ -25,8 +40,8 @@ jobs:
           node-version: '22'
           cache: npm
 
-      - name: Install Node dependencies
-        run: npm ci
+      - name: Install WordPress test suite
+        run: composer test:install-wp
 
       - name: Verify PHP
         run: |
