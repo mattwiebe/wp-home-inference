@@ -98,6 +98,48 @@ Once the proxy is running:
 curl -H "Authorization: Bearer <api-key>" http://127.0.0.1:13531/v1/models
 ```
 
+## Development
+
+Install project tooling:
+
+```bash
+composer install
+npm ci
+```
+
+Run the local checks:
+
+```bash
+composer lint
+composer test
+npm run lint
+npm test
+```
+
+Build a release ZIP locally:
+
+```bash
+npm run build
+```
+
+That creates:
+
+```text
+dist/wp-home-inference.zip
+```
+
+## GitHub Automation
+
+This repository ships with GitHub Actions workflows for:
+
+- CI on pushes and pull requests
+  - PHP lint + PHPUnit
+  - Node syntax check + Node tests
+- Release packaging on tags matching `v*`
+  - runs the full test suite,
+  - builds `dist/wp-home-inference.zip`,
+  - uploads the ZIP to the GitHub release.
+
 ## Current Status
 
 This project is early, but the core loop is in place:

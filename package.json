@@ -1,0 +1,11 @@
+{
+  "name": "wp-home-inference",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "lint": "node --check local/server.mjs",
+    "test": "node --test",
+    "build": "bash scripts/build-release.sh"
+  }
+}

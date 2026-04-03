@@ -195,6 +195,12 @@ function hasUsableConfig( config ) {
 	return '' !== String( config.backendUrl ?? '' ).trim() && '' !== String( config.apiKey ?? '' ).trim();
 }
 
+function buildPublicUrl( dnsName, publicPort ) {
+	return 443 === publicPort
+		? `https://${ dnsName }`
+		: `https://${ dnsName }:${ publicPort }`;
+}
+
 /**
  * Check whether a CLI binary is available on PATH.
  */
@@ -485,9 +491,7 @@ function startFunnel( localPort, publicPort ) {
 	// Detach so it doesn't block shutdown.
 	child.unref();
 
-	const publicUrl = 443 === publicPort
-		? `https://${ dnsName }`
-		: `https://${ dnsName }:${ publicPort }`;
+	const publicUrl = buildPublicUrl( dnsName, publicPort );
 	return publicUrl;
 }
 
@@ -669,4 +673,17 @@ async function main() {
 	} );
 }
 
-main();
+const IS_DIRECT_RUN = process.argv[ 1 ] && fileURLToPath( import.meta.url ) === process.argv[ 1 ];
+
+if ( IS_DIRECT_RUN ) {
+	main();
+}
+
+export {
+	buildPublicUrl,
+	getEffectiveConfig,
+	hasUsableConfig,
+	parseBooleanEnv,
+	parseEnvFile,
+	parseNumberOrFallback,
+};

@@ -1,0 +1,16 @@
+{
+    "name": "mattwiebe/wp-home-inference",
+    "description": "WordPress AI provider plugin and local proxy for self-hosted inference.",
+    "type": "wordpress-plugin",
+    "license": "GPL-2.0-or-later",
+    "require-dev": {
+        "phpunit/phpunit": "^9.6"
+    },
+    "scripts": {
+        "lint": [
+            "php -l plugin.php",
+            "find src tests/phpunit -name '*.php' -print0 | xargs -0 -n1 php -l"
+        ],
+        "test": "phpunit --configuration phpunit.xml.dist"
+    }
+}
