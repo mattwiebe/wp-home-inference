@@ -59,6 +59,16 @@ wphi init
 wphi up
 ```
 
+macOS background service management:
+
+```bash
+wphi install
+wphi start
+wphi stop
+wphi status
+wphi uninstall
+```
+
 You can also run it without a global install:
 
 ```bash
@@ -69,8 +79,13 @@ npx @mattwiebe/wp-home-inference up
 For local development from this repo, you can still use:
 
 ```bash
-node bin/wp-home-inference.mjs init
-node bin/wp-home-inference.mjs up
+npm run init
+npm run up
+npm run service:install
+npm run start
+npm run stop
+npm run status
+npm run service:uninstall
 ```
 
 That guided setup will:
@@ -92,6 +107,8 @@ To reconfigure later:
 ```bash
 wphi init
 ```
+
+On macOS, `wphi install` or `npm run service:install` writes a LaunchAgent at `~/Library/LaunchAgents/com.mattwiebe.wp-home-inference.plist` so the proxy can keep running in the background across logins.
 
 Useful overrides:
 
@@ -195,6 +212,16 @@ Preferred usage:
 npm install -g @mattwiebe/wp-home-inference
 wphi init
 wphi up
+```
+
+The CLI also exposes macOS service management:
+
+```bash
+wphi install
+wphi start
+wphi stop
+wphi status
+wphi uninstall
 ```
 
 It also works without installation:

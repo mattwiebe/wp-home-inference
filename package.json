@@ -1,6 +1,6 @@
 {
   "name": "@mattwiebe/wp-home-inference",
-  "version": "0.1.3",
+  "version": "0.1.4",
   "description": "CLI and WordPress plugin for routing AI inference to models running on your own machine.",
   "type": "module",
   "bin": {
@@ -10,10 +10,18 @@
   "files": [
     "bin/wp-home-inference.mjs",
     "local/server.mjs",
+    "scripts/launch-agent.mjs",
     "README.md"
   ],
   "scripts": {
-    "lint": "node --check bin/wp-home-inference.mjs && node --check local/server.mjs",
+    "up": "node local/server.mjs",
+    "init": "node local/server.mjs init",
+    "start": "node scripts/launch-agent.mjs start",
+    "stop": "node scripts/launch-agent.mjs stop",
+    "status": "node scripts/launch-agent.mjs status",
+    "service:install": "node scripts/launch-agent.mjs install",
+    "service:uninstall": "node scripts/launch-agent.mjs uninstall",
+    "lint": "node --check bin/wp-home-inference.mjs && node --check local/server.mjs && node --check scripts/launch-agent.mjs",
     "test": "node --test",
     "build": "npm run build:plugin && npm run build:npm",
     "build:plugin": "bash scripts/build-plugin-zip.sh",

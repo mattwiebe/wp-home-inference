@@ -466,6 +466,10 @@ function render_admin_page(): void {
 			<p class="description"><?php esc_html_e( 'This will configure the proxy, auto-detect your inference backend, optionally start a Tailscale Funnel, and save your local settings for future runs.', 'wp-home-inference' ); ?></p>
 			<p><?php esc_html_e( 'After setup, start the proxy any time with:', 'wp-home-inference' ); ?></p>
 			<?php render_copyable_command( 'wphi up' ); ?>
+			<p class="description"><?php esc_html_e( 'If you are working from the plugin repo locally instead of a global npm install, the equivalent commands are `npm run init`, `npm run up`, and `npm run service:install`.', 'wp-home-inference' ); ?></p>
+			<p><?php esc_html_e( 'On macOS, you can install a background LaunchAgent with:', 'wp-home-inference' ); ?></p>
+			<?php render_copyable_command( 'wphi install' ); ?>
+			<p class="description"><?php esc_html_e( 'That writes a LaunchAgent so the proxy can run in the background. Use `wphi start`, `wphi stop`, and `wphi uninstall` to manage it later.', 'wp-home-inference' ); ?></p>
 
 			<h3><?php esc_html_e( 'Step 4: Enter the connection details below', 'wp-home-inference' ); ?></h3>
 			<p><?php esc_html_e( 'Copy the Endpoint URL and API Key shown by the proxy into the form below.', 'wp-home-inference' ); ?></p>
@@ -549,6 +553,7 @@ function render_admin_page(): void {
 			<h2><?php esc_html_e( 'Server Info', 'wp-home-inference' ); ?></h2>
 			<p class="description"><?php esc_html_e( 'Your local proxy should be started with:', 'wp-home-inference' ); ?></p>
 			<?php render_copyable_command( 'wphi up' ); ?>
+			<p class="description"><?php esc_html_e( 'Local development from this repo can also use `npm run up`.', 'wp-home-inference' ); ?></p>
 		</div>
 		<?php endif; ?>
 

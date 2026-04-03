@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 import { spawn } from 'node:child_process';
-import { readFileSync } from 'node:fs';
+import { readFileSync, realpathSync } from 'node:fs';
 import { homedir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -13,10 +13,19 @@ const CONFIG_PATH = join( homedir(), '.config', 'wp-home-inference', '.env' );
 const PACKAGE_JSON_PATH = join( ROOT_DIR, 'package.json' );
 const PACKAGE_JSON = JSON.parse( readFileSync( PACKAGE_JSON_PATH, 'utf8' ) );
 const VERSION = PACKAGE_JSON.version;
+const SCRIPT_MAP = {
+	up: 'up',
+	init: 'init',
+	start: 'start',
+	stop: 'stop',
+	status: 'status',
+	install: 'service:install',
+	uninstall: 'service:uninstall',
+};
 
 function normalizeArgs( rawArgs ) {
 	if ( rawArgs.length === 0 ) {
-		return { action: 'run', forwardedArgs: [] };
+		return { action: 'script', script: 'up', forwardedArgs: [] };
 	}
 
 	const first = rawArgs[0];
@@ -29,16 +38,16 @@ function normalizeArgs( rawArgs ) {
 		return { action: 'version', forwardedArgs: [] };
 	}
 
-	if ( first === 'up' ) {
-		return { action: 'run', forwardedArgs: rawArgs.slice( 1 ) };
-	}
-
-	if ( first === 'init' ) {
-		return { action: 'run', forwardedArgs: rawArgs };
+	if ( Object.hasOwn( SCRIPT_MAP, first ) ) {
+		return {
+			action: 'script',
+			script: SCRIPT_MAP[ first ],
+			forwardedArgs: [ ...rawArgs.slice( 1 ) ],
+		};
 	}
 
 	if ( first.startsWith( '-' ) ) {
-		return { action: 'run', forwardedArgs: rawArgs };
+		return { action: 'script', script: 'up', forwardedArgs: rawArgs };
 	}
 
 	return { action: 'help', forwardedArgs: [] };
@@ -50,12 +59,22 @@ function helpText() {
 Usage:
   wphi up [options]
   wphi init [options]
+  wphi install
+  wphi start
+  wphi stop
+  wphi status
+  wphi uninstall
   wphi --help
   wphi --version
 
 Commands:
-  up        Start the Home Inference proxy
-  init      Configure or reconfigure the proxy
+  up         Alias for npm run up
+  init       Alias for npm run init
+  install    Alias for npm run service:install
+  start      Alias for npm run start
+  stop       Alias for npm run stop
+  status     Alias for npm run status
+  uninstall  Alias for npm run service:uninstall
 
 Options:
   --port <n>         Local proxy port (default: 13531)
@@ -81,8 +100,16 @@ function main() {
 	}
 
 	const child = spawn(
-		process.execPath,
-		[ SERVER_PATH, ...normalized.forwardedArgs ],
+		'npm',
+		[
+			'run',
+			'--silent',
+			'--prefix',
+			ROOT_DIR,
+			normalized.script,
+			'--',
+			...normalized.forwardedArgs,
+		],
 		{
 			stdio: 'inherit',
 			env: {
@@ -102,7 +129,7 @@ function main() {
 	} );
 }
 
-const IS_DIRECT_RUN = process.argv[ 1 ] && fileURLToPath( import.meta.url ) === process.argv[ 1 ];
+const IS_DIRECT_RUN = process.argv[ 1 ] && realpathSync( fileURLToPath( import.meta.url ) ) === realpathSync( process.argv[ 1 ] );
 
 if ( IS_DIRECT_RUN ) {
 	main();

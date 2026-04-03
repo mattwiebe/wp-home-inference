@@ -10,13 +10,17 @@ test( 'normalizeArgs handles help and version flags locally', () => {
 	assert.deepEqual( normalizeArgs( [ '-v' ] ), { action: 'version', forwardedArgs: [] } );
 } );
 
-test( 'normalizeArgs maps up to bare server run and preserves init', () => {
-	assert.deepEqual( normalizeArgs( [ 'up' ] ), { action: 'run', forwardedArgs: [] } );
-	assert.deepEqual( normalizeArgs( [ 'up', '--port', '13531' ] ), { action: 'run', forwardedArgs: [ '--port', '13531' ] } );
-	assert.deepEqual( normalizeArgs( [ 'init' ] ), { action: 'run', forwardedArgs: [ 'init' ] } );
+test( 'normalizeArgs maps commands to npm scripts', () => {
+	assert.deepEqual( normalizeArgs( [ 'up' ] ), { action: 'script', script: 'up', forwardedArgs: [] } );
+	assert.deepEqual( normalizeArgs( [ 'up', '--port', '13531' ] ), { action: 'script', script: 'up', forwardedArgs: [ '--port', '13531' ] } );
+	assert.deepEqual( normalizeArgs( [ 'init' ] ), { action: 'script', script: 'init', forwardedArgs: [] } );
+	assert.deepEqual( normalizeArgs( [ 'start' ] ), { action: 'script', script: 'start', forwardedArgs: [] } );
+	assert.deepEqual( normalizeArgs( [ 'install' ] ), { action: 'script', script: 'service:install', forwardedArgs: [] } );
+	assert.deepEqual( normalizeArgs( [ '--port', '13531' ] ), { action: 'script', script: 'up', forwardedArgs: [ '--port', '13531' ] } );
 } );
 
 test( 'helpText and version include the package version', () => {
 	assert.match( helpText(), new RegExp( `wphi v${ VERSION.replace( /\./g, '\\.' ) }` ) );
 	assert.match( helpText(), /wphi --version/ );
+	assert.match( helpText(), /Alias for npm run up/ );
 } );
