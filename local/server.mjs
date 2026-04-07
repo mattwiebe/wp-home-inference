@@ -754,6 +754,7 @@ if ( IS_DIRECT_RUN ) {
 }
 
 export {
+	ENV_PATH,
 	buildPublicUrl,
 	formatRequestLogMessage,
 	FUNNEL_PORT_CHOICES,
@@ -764,4 +765,5 @@ export {
 	parseEnvFile,
 	parseNumberOrFallback,
 	PLUGIN_RELEASES_URL,
+	writeConfig,
 };

@@ -66,6 +66,7 @@ wphi install
 wphi start
 wphi stop
 wphi status
+wphi rotate-key
 wphi uninstall
 ```
 
@@ -85,6 +86,7 @@ npm run service:install
 npm run start
 npm run stop
 npm run status
+npm run rotate-key
 npm run service:uninstall
 ```
 
@@ -109,6 +111,21 @@ wphi init
 ```
 
 On macOS, `wphi install` or `npm run service:install` writes a LaunchAgent at `~/Library/LaunchAgents/com.mattwiebe.wp-home-inference.plist` so the proxy can keep running in the background across logins.
+
+To rotate the shared API key in the persisted `.env` file and print the new key:
+
+```bash
+wph rotate-key
+```
+
+This also works as:
+
+```bash
+wphi rotate-key
+npm run rotate-key
+```
+
+On macOS, if the LaunchAgent is currently running, `rotate-key` will restart it automatically so the background process picks up the new key immediately.
 
 Useful overrides:
 
@@ -301,6 +318,8 @@ npx @mattwiebe/wp-home-inference init
 ```
 
 The package also exposes `wp-home-inference` as a longer alias, but `wphi` is the intended global command.
+
+For convenience, the package also exposes the shorter `wph` alias.
 
 The npm CLI stores its persistent config in:
 

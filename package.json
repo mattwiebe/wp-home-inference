@@ -4,6 +4,7 @@
   "description": "CLI and WordPress plugin for routing AI inference to models running on your own machine.",
   "type": "module",
   "bin": {
+    "wph": "bin/wp-home-inference.mjs",
     "wphi": "bin/wp-home-inference.mjs",
     "wp-home-inference": "bin/wp-home-inference.mjs"
   },
@@ -19,6 +20,7 @@
     "start": "node scripts/launch-agent.mjs start",
     "stop": "node scripts/launch-agent.mjs stop",
     "status": "node scripts/launch-agent.mjs status",
+    "rotate-key": "node scripts/launch-agent.mjs rotate-key",
     "service:install": "node scripts/launch-agent.mjs install",
     "service:uninstall": "node scripts/launch-agent.mjs uninstall",
     "lint": "node --check bin/wp-home-inference.mjs && node --check local/server.mjs && node --check scripts/launch-agent.mjs",

@@ -15,6 +15,7 @@ test( 'normalizeArgs maps commands to npm scripts', () => {
 	assert.deepEqual( normalizeArgs( [ 'up', '--port', '13531' ] ), { action: 'script', script: 'up', forwardedArgs: [ '--port', '13531' ] } );
 	assert.deepEqual( normalizeArgs( [ 'init' ] ), { action: 'script', script: 'init', forwardedArgs: [] } );
 	assert.deepEqual( normalizeArgs( [ 'start' ] ), { action: 'script', script: 'start', forwardedArgs: [] } );
+	assert.deepEqual( normalizeArgs( [ 'rotate-key' ] ), { action: 'script', script: 'rotate-key', forwardedArgs: [] } );
 	assert.deepEqual( normalizeArgs( [ 'install' ] ), { action: 'script', script: 'service:install', forwardedArgs: [] } );
 	assert.deepEqual( normalizeArgs( [ '--port', '13531' ] ), { action: 'script', script: 'up', forwardedArgs: [ '--port', '13531' ] } );
 } );
@@ -23,4 +24,5 @@ test( 'helpText and version include the package version', () => {
 	assert.match( helpText(), new RegExp( `wphi v${ VERSION.replace( /\./g, '\\.' ) }` ) );
 	assert.match( helpText(), /wphi --version/ );
 	assert.match( helpText(), /Alias for npm run up/ );
+	assert.match( helpText(), /rotate-key/ );
 } );

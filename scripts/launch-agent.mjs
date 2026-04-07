@@ -1,12 +1,13 @@
 #!/usr/bin/env node
 
 import { execFileSync } from 'node:child_process';
+import { randomBytes } from 'node:crypto';
 import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { homedir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import { getEffectiveConfig, hasUsableConfig } from '../local/server.mjs';
+import { ENV_PATH as DEFAULT_ENV_PATH, getEffectiveConfig, hasUsableConfig, writeConfig } from '../local/server.mjs';
 
 const SCRIPT_DIR = dirname( fileURLToPath( import.meta.url ) );
 const ROOT_DIR = dirname( SCRIPT_DIR );
@@ -19,7 +20,7 @@ const PLIST_PATH = join( LAUNCH_AGENTS_DIR, `${ LABEL }.plist` );
 const LOG_DIR = join( homedir(), 'Library', 'Logs', 'wp-home-inference' );
 const STDOUT_PATH = join( LOG_DIR, 'stdout.log' );
 const STDERR_PATH = join( LOG_DIR, 'stderr.log' );
-const ENV_PATH = process.env.WP_HOME_INFERENCE_ENV_PATH || join( ROOT_DIR, 'local', '.env' );
+const ENV_PATH = process.env.WP_HOME_INFERENCE_ENV_PATH || DEFAULT_ENV_PATH;
 const UID = typeof process.getuid === 'function' ? String( process.getuid() ) : '';
 const DOMAIN = UID ? `gui/${ UID }` : '';
 const SERVICE_TARGET = DOMAIN ? `${ DOMAIN }/${ LABEL }` : '';
@@ -187,25 +188,60 @@ function statusService() {
 	console.log( `Loaded: ${ isLoaded() ? 'yes' : 'no' }` );
 }
 
-function main() {
-	requireMacOs();
+function rotateKey() {
+	const config = ensureConfigReady();
+	const nextApiKey = randomBytes( 32 ).toString( 'hex' );
+	const wasLoaded = process.platform === 'darwin' && isLoaded();
 
+	writeConfig( {
+		...config,
+		apiKey: nextApiKey,
+	} );
+
+	console.log( 'Rotated Home Inference API key.' );
+	console.log( `Config: ${ ENV_PATH }` );
+	console.log( `API Key: ${ nextApiKey }` );
+
+	if ( process.platform !== 'darwin' ) {
+		return;
+	}
+
+	if ( wasLoaded ) {
+		console.log( '' );
+		console.log( 'LaunchAgent is currently running; restarting it now.' );
+		startService();
+		return;
+	}
+
+	console.log( '' );
+	console.log( 'LaunchAgent is not running; no restart was needed.' );
+}
+
+function main() {
 	const action = process.argv[ 2 ] || 'status';
 
 	switch ( action ) {
 		case 'install':
+			requireMacOs();
 			installService();
 			break;
 		case 'start':
+			requireMacOs();
 			startService();
 			break;
 		case 'stop':
+			requireMacOs();
 			stopService();
 			break;
 		case 'status':
+			requireMacOs();
 			statusService();
 			break;
+		case 'rotate-key':
+			rotateKey();
+			break;
 		case 'uninstall':
+			requireMacOs();
 			uninstallService();
 			break;
 		default:
@@ -227,4 +263,5 @@ export {
 	PLIST_PATH,
 	SERVICE_TARGET,
 	buildPlist,
+	rotateKey,
 };

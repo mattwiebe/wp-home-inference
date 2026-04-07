@@ -19,6 +19,7 @@ const SCRIPT_MAP = {
 	start: 'start',
 	stop: 'stop',
 	status: 'status',
+	'rotate-key': 'rotate-key',
 	install: 'service:install',
 	uninstall: 'service:uninstall',
 };
@@ -63,6 +64,7 @@ Usage:
   wphi start
   wphi stop
   wphi status
+  wphi rotate-key
   wphi uninstall
   wphi --help
   wphi --version
@@ -74,6 +76,7 @@ Commands:
   start      Alias for npm run start
   stop       Alias for npm run stop
   status     Alias for npm run status
+  rotate-key Alias for npm run rotate-key
   uninstall  Alias for npm run service:uninstall
 
 Options:
