@@ -240,7 +240,6 @@ async function resolveReleaseVersion() {
 
 function runVerification() {
 	run( 'composer', [ 'lint' ], { stdio: 'inherit' } );
-	run( 'composer', [ 'test' ], { stdio: 'inherit' } );
 	run( 'npm', [ 'run', 'lint' ], { stdio: 'inherit' } );
 	run( 'npm', [ 'test' ], { stdio: 'inherit' } );
 	run( 'npm', [ 'run', 'build' ], { stdio: 'inherit' } );

@@ -190,7 +190,7 @@ This command:
 - verifies version alignment between `package.json` and `plugin.php`
 - requires a clean `main` branch worktree
 - if the target tag already exists, offers to bump to the next patch semver and continue
-- runs PHP and Node verification
+- runs PHP lint plus Node verification
 - builds the plugin ZIP and npm tarball
 - creates and pushes the git tag
 - waits for the GitHub Release workflow to publish release assets
