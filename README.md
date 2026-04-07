@@ -179,6 +179,30 @@ npm run lint
 npm test
 ```
 
+Cut a release from the repo:
+
+```bash
+npm run release
+```
+
+This command:
+
+- verifies version alignment between `package.json` and `plugin.php`
+- requires a clean `main` branch worktree
+- runs PHP and Node verification
+- builds the plugin ZIP and npm tarball
+- creates and pushes the git tag
+- waits for the GitHub Release workflow to publish release assets
+- reports whether Packagist notification is configured in GitHub secrets
+
+Because npm publish is manual in this repo due OTP requirements, the default release command stops short of publishing to npm and prints the exact next command.
+
+If you want the command to publish to npm too, opt in explicitly:
+
+```bash
+npm run release -- --publish-npm --otp <code>
+```
+
 Build a release ZIP locally:
 
 ```bash
