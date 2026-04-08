@@ -50,6 +50,7 @@ require_once __DIR__ . '/src/autoload.php';
  *     connector_auth_method?: string,
  *     credentials_url?: string,
  *     use_custom_connector_ui?: bool,
+ *     connector_logo_url?: string,
  *     endpoint_label: string,
  *     endpoint_description: string,
  *     endpoint_placeholder: string,
@@ -145,6 +146,7 @@ function provider_definitions(): array {
 			'connector_auth_method' => 'api_key',
 			'credentials_url'       => 'https://actual.inc/console/api',
 			'use_custom_connector_ui' => false,
+			'connector_logo_url'    => plugins_url( 'assets/actual-computer.jpg', __FILE__ ),
 			'endpoint_label'        => __( 'Base URL', 'wp-home-inference' ),
 			'endpoint_description'  => __( 'Actual Computer uses the fixed API base URL `https://api.actual.inc/v1`.', 'wp-home-inference' ),
 			'endpoint_placeholder'  => 'https://api.actual.inc',
@@ -169,15 +171,10 @@ function provider_definitions(): array {
 						'body'    => __( 'After saving your API key, choose the Actual Computer model you want WordPress to expose.', 'wp-home-inference' ),
 					),
 				),
+				),
+				'info_card'             => array(),
 			),
-			'info_card'             => array(
-				'heading'     => __( 'Connection Notes', 'wp-home-inference' ),
-				'description' => __( 'This connector uses the fixed endpoint `https://api.actual.inc/v1` with bearer authentication.', 'wp-home-inference' ),
-				'commands'    => array(),
-				'notes'       => array(),
-			),
-		),
-	);
+		);
 
 	return $definitions;
 }
@@ -347,6 +344,10 @@ function register_connector( $registry ): void {
 		if ( 'api_key' === $provider['connector_auth_method'] && ! empty( $provider['credentials_url'] ) ) {
 			$connector['authentication']['credentials_url'] = $provider['credentials_url'];
 			$connector['authentication']['setting_name']    = $provider['api_key_option'];
+		}
+
+		if ( ! empty( $provider['connector_logo_url'] ) ) {
+			$connector['logo_url'] = $provider['connector_logo_url'];
 		}
 
 		$registry->register( $slug, $connector );
@@ -915,10 +916,10 @@ function render_provider_admin_page( string $slug ): void {
 			<?php submit_button(); ?>
 		</form>
 
-		<?php if ( $is_configured ) : ?>
-			<div class="card" style="max-width: 720px;">
-				<h2><?php echo esc_html( $provider['info_card']['heading'] ); ?></h2>
-				<p class="description"><?php echo esc_html( $provider['info_card']['description'] ); ?></p>
+			<?php if ( $is_configured && ! empty( $provider['info_card'] ) ) : ?>
+				<div class="card" style="max-width: 720px;">
+					<h2><?php echo esc_html( $provider['info_card']['heading'] ); ?></h2>
+					<p class="description"><?php echo esc_html( $provider['info_card']['description'] ); ?></p>
 				<?php foreach ( $provider['info_card']['commands'] as $command ) : ?>
 					<?php render_copyable_command( $command ); ?>
 				<?php endforeach; ?>
