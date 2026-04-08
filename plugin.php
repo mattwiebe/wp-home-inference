@@ -5,7 +5,7 @@
  * Description: AI providers for routing inference to your own machine or to an Actual Computer endpoint.
  * Requires at least: 7.0
  * Requires PHP: 7.4
- * Version: 0.1.5
+ * Version: 0.1.6
  * Author: Matt
  * License: GPL-2.0-or-later
  * License URI: https://spdx.org/licenses/GPL-2.0-or-later.html
