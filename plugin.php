@@ -804,20 +804,16 @@ function render_provider_admin_page( string $slug ): void {
 		}
 		.local-ai-copy {
 			position: absolute;
-			top: 6px;
+			top: 9px;
 			right: 6px;
 			cursor: pointer;
-			background: none;
-			border: 1px solid #8c8f94;
-			border-radius: 2px;
-			padding: 2px 8px;
-			font-size: 12px;
-			color: #2271b1;
-			line-height: 1.6;
+			text-transform: uppercase;
+			font-size: 11px;
+			letter-spacing: 0.06em;
+			opacity: .66;
 		}
-		.local-ai-copy:hover {
-			border-color: #2271b1;
-			color: #135e96;
+		.local-ai-copy:hover, .local-ai-copy:active {
+			opacity: 1;
 		}
 	</style>
 	<div class="wrap">
@@ -930,13 +926,51 @@ function render_provider_admin_page( string $slug ): void {
 		<?php endif; ?>
 	</div>
 	<script>
+	function copyLocalAiText( text ) {
+		if ( navigator.clipboard && typeof navigator.clipboard.writeText === 'function' ) {
+			return navigator.clipboard.writeText( text );
+		}
+
+		return new Promise( function( resolve, reject ) {
+			var textarea = document.createElement( 'textarea' );
+
+			textarea.value = text;
+			textarea.setAttribute( 'readonly', '' );
+			textarea.style.position = 'absolute';
+			textarea.style.left = '-9999px';
+			document.body.appendChild( textarea );
+			textarea.select();
+
+			try {
+				if ( document.execCommand( 'copy' ) ) {
+					resolve();
+					return;
+				}
+
+				reject( new Error( 'Copy command failed.' ) );
+			} catch ( error ) {
+				reject( error );
+			} finally {
+				document.body.removeChild( textarea );
+			}
+		} );
+	}
+
+	function markLocalAiCopyResult( btn, text ) {
+		var orig = btn.textContent;
+		btn.textContent = text;
+		setTimeout( function() {
+			btn.textContent = orig;
+		}, 2000 );
+	}
+
 	document.querySelectorAll( '.local-ai-copy' ).forEach( function( btn ) {
 		btn.addEventListener( 'click', function() {
 			var text = this.parentNode.querySelector( 'code' ).textContent;
-			navigator.clipboard.writeText( text ).then( function() {
-				var orig = btn.textContent;
-				btn.textContent = <?php echo wp_json_encode( __( 'Copied!', 'ai-connector-for-local-ai' ) ); ?>;
-				setTimeout( function() { btn.textContent = orig; }, 2000 );
+			copyLocalAiText( text ).then( function() {
+				markLocalAiCopyResult( btn, <?php echo wp_json_encode( __( 'Copied!', 'ai-connector-for-local-ai' ) ); ?> );
+			} ).catch( function() {
+				markLocalAiCopyResult( btn, <?php echo wp_json_encode( __( 'Copy failed', 'ai-connector-for-local-ai' ) ); ?> );
 			} );
 		} );
 	} );
