@@ -12,6 +12,7 @@ const ROOT_DIR = dirname( SCRIPT_DIR );
 const PACKAGE_JSON_PATH = join( ROOT_DIR, 'package.json' );
 const PACKAGE_LOCK_PATH = join( ROOT_DIR, 'package-lock.json' );
 const PLUGIN_PATH = join( ROOT_DIR, 'plugin.php' );
+const README_TXT_PATH = join( ROOT_DIR, 'readme.txt' );
 const RELEASE_WORKFLOW = 'release.yml';
 const REPO = 'mattwiebe/ai-connector-for-local-ai';
 
@@ -119,13 +120,41 @@ function writePluginVersion( version ) {
 	writeFileSync( PLUGIN_PATH, updated, 'utf8' );
 }
 
+function getReadmeStableTag() {
+	const readme = readFileSync( README_TXT_PATH, 'utf8' );
+	const match = readme.match( /^Stable tag:\s+(.+)$/m );
+
+	if ( ! match ) {
+		throw new Error( 'Could not find Stable tag in readme.txt.' );
+	}
+
+	return match[1].trim();
+}
+
+function writeReadmeStableTag( version ) {
+	const readme = readFileSync( README_TXT_PATH, 'utf8' );
+	const updated = readme.replace(
+		/^(Stable tag:\s+).+$/m,
+		`$1${ version }`
+	);
+
+	writeFileSync( README_TXT_PATH, updated, 'utf8' );
+}
+
 function ensureVersionAlignment() {
 	const packageVersion = getPackageVersion();
 	const pluginVersion = getPluginVersion();
+	const readmeStableTag = getReadmeStableTag();
 
 	if ( packageVersion !== pluginVersion ) {
 		throw new Error(
 			`Version mismatch: package.json is ${ packageVersion }, plugin.php is ${ pluginVersion }.`
+		);
+	}
+
+	if ( packageVersion !== readmeStableTag ) {
+		throw new Error(
+			`Version mismatch: package.json is ${ packageVersion }, readme.txt Stable tag is ${ readmeStableTag }.`
 		);
 	}
 
@@ -206,7 +235,7 @@ async function promptYesNo( question, defaultValue = true ) {
 }
 
 function commitVersionBump( version ) {
-	run( 'git', [ 'add', 'package.json', 'package-lock.json', 'plugin.php' ], { stdio: 'inherit' } );
+	run( 'git', [ 'add', 'package.json', 'package-lock.json', 'plugin.php', 'readme.txt' ], { stdio: 'inherit' } );
 	run( 'git', [ 'commit', '-m', `Bump version to ${ version }` ], { stdio: 'inherit' } );
 }
 
@@ -233,6 +262,7 @@ async function resolveReleaseVersion() {
 		writePackageVersion( nextVersion );
 		writePackageLockVersion( nextVersion );
 		writePluginVersion( nextVersion );
+		writeReadmeStableTag( nextVersion );
 		commitVersionBump( nextVersion );
 		version = nextVersion;
 	}
