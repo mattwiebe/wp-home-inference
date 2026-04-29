@@ -1,14 +1,14 @@
 {
-  "name": "@mattwiebe/ai-connector-for-local-ai",
+  "name": "@mattwiebe/mw-local-ai-connector",
   "version": "0.2.4",
   "description": "CLI and WordPress plugin for routing AI inference to models running on your own machine.",
   "type": "module",
   "bin": {
-    "laiproxy": "bin/ai-connector-for-local-ai.mjs",
-    "ai-connector-for-local-ai": "bin/ai-connector-for-local-ai.mjs"
+    "laiproxy": "bin/mw-local-ai-connector.mjs",
+    "mw-local-ai-connector": "bin/mw-local-ai-connector.mjs"
   },
   "files": [
-    "bin/ai-connector-for-local-ai.mjs",
+    "bin/mw-local-ai-connector.mjs",
     "local/server.mjs",
     "scripts/launch-agent.mjs",
     "README.md"
@@ -22,7 +22,7 @@
     "rotate-key": "node scripts/launch-agent.mjs rotate-key",
     "service:install": "node scripts/launch-agent.mjs install",
     "service:uninstall": "node scripts/launch-agent.mjs uninstall",
-    "lint": "node --check bin/ai-connector-for-local-ai.mjs && node --check local/server.mjs && node --check scripts/launch-agent.mjs && node --check scripts/release.mjs",
+    "lint": "node --check bin/mw-local-ai-connector.mjs && node --check local/server.mjs && node --check scripts/launch-agent.mjs && node --check scripts/release.mjs",
     "test": "node --test",
     "build": "npm run build:plugin && npm run build:npm",
     "release": "node scripts/release.mjs",
@@ -36,12 +36,12 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/mattwiebe/ai-connector-for-local-ai"
+    "url": "https://github.com/mattwiebe/mw-local-ai-connector"
   },
   "bugs": {
-    "url": "https://github.com/mattwiebe/ai-connector-for-local-ai/issues"
+    "url": "https://github.com/mattwiebe/mw-local-ai-connector/issues"
   },
-  "homepage": "https://github.com/mattwiebe/ai-connector-for-local-ai#readme",
+  "homepage": "https://github.com/mattwiebe/mw-local-ai-connector#readme",
   "license": "GPL-2.0-or-later",
   "engines": {
     "node": ">=20"

@@ -2,20 +2,20 @@
 
 declare(strict_types=1);
 
-namespace WordPress\AiConnectorForLocalAi\Tests\PHPUnit;
+namespace Mattwiebe\LocalAiConnector\Tests\PHPUnit;
 
 use WP_Error;
 use WP_UnitTestCase;
 use WordPress\AiClient\Providers\Http\DTO\Response;
-use WordPress\AiConnectorForLocalAi\Metadata\ActualComputerModelMetadataDirectory;
-use WordPress\AiConnectorForLocalAi\Metadata\LocalAiModelMetadataDirectory;
-use function WordPress\AiConnectorForLocalAi\allow_local_ai_safe_remote_requests;
-use function WordPress\AiConnectorForLocalAi\fetch_proxy_models;
-use function WordPress\AiConnectorForLocalAi\sanitize_api_key;
-use function WordPress\AiConnectorForLocalAi\sanitize_actual_computer_model_id;
-use function WordPress\AiConnectorForLocalAi\sanitize_local_ai_model_id;
-use function WordPress\AiConnectorForLocalAi\should_allow_actual_computer_request;
-use function WordPress\AiConnectorForLocalAi\should_allow_local_ai_request;
+use Mattwiebe\LocalAiConnector\Metadata\ActualComputerModelMetadataDirectory;
+use Mattwiebe\LocalAiConnector\Metadata\LocalAiModelMetadataDirectory;
+use function Mattwiebe\LocalAiConnector\allow_local_ai_safe_remote_requests;
+use function Mattwiebe\LocalAiConnector\fetch_proxy_models;
+use function Mattwiebe\LocalAiConnector\sanitize_api_key;
+use function Mattwiebe\LocalAiConnector\sanitize_actual_computer_model_id;
+use function Mattwiebe\LocalAiConnector\sanitize_local_ai_model_id;
+use function Mattwiebe\LocalAiConnector\should_allow_actual_computer_request;
+use function Mattwiebe\LocalAiConnector\should_allow_local_ai_request;
 
 final class PluginFunctionsTest extends WP_UnitTestCase {
 

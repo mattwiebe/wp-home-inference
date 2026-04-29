@@ -23,12 +23,13 @@
  *   --api-key <key>         Shared secret for authentication (auto-generated if omitted).
  *   --no-tunnel             Skip Tailscale Funnel (if you handle networking yourself).
  *
- * @package WordPress\AiConnectorForLocalAi
+ * @package Mattwiebe\LocalAiConnector
  */
 
 import { createServer } from 'node:http';
 import { randomBytes } from 'node:crypto';
 import { execFileSync, execFile } from 'node:child_process';
+import { Resolver } from 'node:dns/promises';
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { homedir } from 'node:os';
 import { dirname, join } from 'node:path';
@@ -53,8 +54,8 @@ function hasFlag( name ) {
 
 const IS_INIT  = 'init' === process.argv[ 2 ];
 const SCRIPT_DIR = dirname( fileURLToPath( import.meta.url ) );
-const ENV_PATH = process.env.AI_CONNECTOR_FOR_LOCAL_AI_ENV_PATH
-	|| join( homedir(), '.config', 'ai-connector-for-local-ai', '.env' );
+const ENV_PATH = process.env.MW_LOCAL_AI_CONNECTOR_ENV_PATH
+	|| join( homedir(), '.config', 'mw-local-ai-connector', '.env' );
 const PORT_ARG            = arg( 'port', '' );
 const FUNNEL_PORT_ARG     = arg( 'funnel-port', '' );
 const BACKEND_ARG         = arg( 'backend', '' );
@@ -66,7 +67,8 @@ const FUNNEL_PORT_CHOICES = [
 	{ port: 10000, label: '10000' },
 ];
 const ALLOWED_FUNNEL_PORTS = FUNNEL_PORT_CHOICES.map( ( choice ) => choice.port );
-const PLUGIN_RELEASES_URL = 'https://github.com/mattwiebe/ai-connector-for-local-ai/releases/latest';
+const PUBLIC_DNS_SERVERS = [ '1.1.1.1', '8.8.8.8' ];
+const PLUGIN_RELEASES_URL = 'https://github.com/mattwiebe/mw-local-ai-connector/releases/latest';
 let PORT = 13531;
 let BACKEND = '';
 let API_KEY = '';
@@ -155,6 +157,25 @@ function writeConfig( config ) {
 function parseNumberOrFallback( value, fallback ) {
 	const parsed = Number( value );
 	return Number.isFinite( parsed ) && parsed > 0 ? parsed : fallback;
+}
+
+function parsePortNumber( value ) {
+	const normalized = String( value ).trim();
+	if ( ! /^\d+$/.test( normalized ) ) {
+		return null;
+	}
+
+	const port = Number( normalized );
+	return Number.isInteger( port ) && port >= 1 && port <= 65535 ? port : null;
+}
+
+function buildLocalhostBackendUrl( port ) {
+	const parsed = parsePortNumber( port );
+	if ( null === parsed ) {
+		return '';
+	}
+
+	return `http://localhost:${ parsed }`;
 }
 
 function parseBooleanEnv( value ) {
@@ -296,6 +317,31 @@ function promptChoice( question, choices, defaultIndex = null ) {
 	} );
 }
 
+function promptText( question ) {
+	const rl = createInterface( { input: process.stdin, output: process.stdout } );
+
+	return new Promise( ( resolve ) => {
+		rl.question( question, ( answer ) => {
+			rl.close();
+			resolve( answer.trim() );
+		} );
+	} );
+}
+
+async function promptBackendPort() {
+	while ( true ) {
+		const answer = await promptText( '  Backend localhost port? ' );
+		const url = buildLocalhostBackendUrl( answer );
+		if ( '' !== url ) {
+			console.log( '' );
+			return url;
+		}
+
+		console.error( '  Enter a port from 1 to 65535.' );
+		console.error( '' );
+	}
+}
+
 /**
  * Resolve which public HTTPS port to use for Tailscale Funnel.
  */
@@ -328,32 +374,38 @@ async function resolveBackend() {
 	const running   = detected.filter( ( b ) => b.running );
 	const installed = detected.filter( ( b ) => b.installed && ! b.running );
 
-	if ( running.length === 1 ) {
-		const b = running[0];
+	if ( running.length > 0 ) {
+		const choices = running.map( ( b ) => {
+			const modelCount = b.models?.length ?? 0;
+			const modelInfo = modelCount > 0
+				? ` - ${ modelCount } model${ modelCount === 1 ? '' : 's' }: ${ b.models.join( ', ' ) }`
+				: '';
+			return `${ b.name } (${ b.url })${ modelInfo }`;
+		} );
+		choices.push( 'Other OpenAI-compatible backend on localhost (enter port)' );
+
+		if ( running.length === 1 ) {
+			console.log( '  Found one backend:' );
+		} else {
+			console.log( '  Multiple backends detected:' );
+		}
+		console.log( '' );
+
+		const idx = await promptChoice( '  Which backend? [1]: ', choices, 0 );
+		console.log( '' );
+
+		if ( idx === running.length ) {
+			return promptBackendPort();
+		}
+
+		const b = running[ idx ];
 		const modelCount = b.models?.length ?? 0;
-		console.log( `  Found ${ b.name } running at ${ b.url }` );
+		console.log( `  Using ${ b.name } at ${ b.url }` );
 		if ( modelCount > 0 ) {
 			console.log( `  ${ modelCount } model${ modelCount === 1 ? '' : 's' } available: ${ b.models.join( ', ' ) }` );
 		}
 		console.log( '' );
 		return b.url;
-	}
-
-	if ( running.length > 1 ) {
-		console.log( '  Multiple backends detected:' );
-		console.log( '' );
-
-		const choices = running.map( ( b ) => {
-			const modelCount = b.models?.length ?? 0;
-			const modelInfo = modelCount > 0
-				? ` — ${ modelCount } model${ modelCount === 1 ? '' : 's' }: ${ b.models.join( ', ' ) }`
-				: '';
-			return `${ b.name } (${ b.url })${ modelInfo }`;
-		} );
-
-		const idx = await promptChoice( '  Which backend? [number]: ', choices );
-		console.log( '' );
-		return running[ idx ].url;
 	}
 
 	if ( installed.length > 0 ) {
@@ -363,20 +415,20 @@ async function resolveBackend() {
 			console.error( `    • ${ b.name } (${ b.cli }) — start it with: ${ startHint }` );
 		}
 		console.error( '' );
-		console.error( '  Start one of the above, then re-run this script.' );
+		console.error( '  Start one of the above, or enter the port for another local OpenAI-compatible backend.' );
 		console.error( '' );
-		process.exit( 1 );
+		return promptBackendPort();
 	}
 
 	console.error( '  No supported backends found.' );
 	console.error( '' );
-	console.error( '  Install one of:' );
+	console.error( '  Install one of these, or enter the port for another local OpenAI-compatible backend:' );
 	console.error( '    • Ollama  — https://ollama.com' );
 	console.error( '    • LM Studio — https://lmstudio.ai' );
 	console.error( '' );
-	console.error( '  Or pass --backend <url> to specify a custom endpoint.' );
+	console.error( '  You can also pass --backend <url> to specify a custom endpoint non-interactively.' );
 	console.error( '' );
-	process.exit( 1 );
+	return promptBackendPort();
 }
 
 async function promptYesNo( question, defaultValue = true ) {
@@ -461,6 +513,46 @@ function getTailscaleDnsName() {
 	}
 	// DNSName has a trailing dot — remove it.
 	return status.Self.DNSName.replace( /\.$/, '' );
+}
+
+async function resolvePublicDnsRecords( dnsName, servers = PUBLIC_DNS_SERVERS ) {
+	const records = [];
+
+	for ( const server of servers ) {
+		const resolver = new Resolver();
+		resolver.setServers( [ server ] );
+
+		try {
+			records.push( ...await resolver.resolve4( dnsName ) );
+		} catch {
+			// Try the next record type/server.
+		}
+
+		try {
+			records.push( ...await resolver.resolve6( dnsName ) );
+		} catch {
+			// Try the next server.
+		}
+
+		if ( records.length > 0 ) {
+			break;
+		}
+	}
+
+	return records;
+}
+
+async function warnIfPublicDnsUnavailable( dnsName, publicUrl ) {
+	const records = await resolvePublicDnsRecords( dnsName );
+	if ( records.length > 0 ) {
+		return;
+	}
+
+	console.warn( '  Warning: Public DNS does not resolve this Funnel hostname yet.' );
+	console.warn( `  WordPress may report "Could not resolve host: ${ dnsName }" for ${ publicUrl }.` );
+	console.warn( '  Tailscale says Funnel DNS propagation can take up to 10 minutes.' );
+	console.warn( '  If it still fails after that, check that Funnel, MagicDNS, HTTPS certificates, and your Funnel policy are enabled in Tailscale.' );
+	console.warn( '' );
 }
 
 /**
@@ -701,11 +793,13 @@ async function main() {
 	API_KEY = config.apiKey;
 	NO_TUNNEL = config.noTunnel;
 
+	let funnelDnsName = null;
 	let publicUrl = null;
 	let funnelPort = NO_TUNNEL ? null : config.funnelPort;
 
 	if ( ! NO_TUNNEL ) {
 		ensureTailscale();
+		funnelDnsName = getTailscaleDnsName();
 		publicUrl = startFunnel( PORT, funnelPort );
 	}
 
@@ -740,6 +834,10 @@ async function main() {
 		console.log( `    Download the WordPress plugin ZIP at ${ PLUGIN_RELEASES_URL }` );
 		console.log( '    Request logs will appear below with endpoint path and caller IP/host.' );
 		console.log( '' );
+
+		if ( funnelDnsName && publicUrl ) {
+			warnIfPublicDnsUnavailable( funnelDnsName, publicUrl ).catch( () => {} );
+		}
 	} );
 
 	process.on( 'SIGINT', () => {
@@ -757,6 +855,7 @@ if ( IS_DIRECT_RUN ) {
 
 export {
 	ENV_PATH,
+	buildLocalhostBackendUrl,
 	buildPublicUrl,
 	formatRequestLogMessage,
 	FUNNEL_PORT_CHOICES,
@@ -766,6 +865,7 @@ export {
 	parseBooleanEnv,
 	parseEnvFile,
 	parseNumberOrFallback,
+	parsePortNumber,
 	PLUGIN_RELEASES_URL,
 	writeConfig,
 };

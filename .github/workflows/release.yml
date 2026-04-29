@@ -64,7 +64,7 @@ jobs:
       - name: Upload package artifact
         uses: actions/upload-artifact@v4
         with:
-          name: ai-connector-for-local-ai
+          name: mw-local-ai-connector
           path: dist/*
 
       - name: Publish GitHub release asset

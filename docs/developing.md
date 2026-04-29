@@ -50,7 +50,7 @@ npm run release
 
 This command:
 
-- verifies version alignment between `package.json` and `plugin.php`
+- verifies version alignment between `package.json` and `mw-local-ai-connector.php`
 - requires a clean `main` branch worktree
 - if the target tag already exists, offers to bump to the next patch semver and continue
 - runs PHP lint plus Node verification
@@ -76,7 +76,7 @@ npm run build:plugin
 That creates:
 
 ```text
-dist/ai-connector-for-local-ai-plugin.zip
+dist/mw-local-ai-connector-plugin.zip
 ```
 
 Build the npm package tarball locally:
@@ -88,7 +88,7 @@ npm run build:npm
 That creates:
 
 ```text
-dist/mattwiebe-ai-connector-for-local-ai-<version>.tgz
+dist/mattwiebe-mw-local-ai-connector-<version>.tgz
 ```
 
 ## GitHub Automation
@@ -109,13 +109,13 @@ To cut a release:
 1. Make sure `package.json` and the plugin header version are aligned.
 2. Create and push a semver tag like `v0.2.0`.
 3. GitHub Actions will build:
-   - `dist/ai-connector-for-local-ai-plugin.zip`
-   - `dist/mattwiebe-ai-connector-for-local-ai-<version>.tgz`
+   - `dist/mw-local-ai-connector-plugin.zip`
+   - `dist/mattwiebe-mw-local-ai-connector-<version>.tgz`
 4. The workflow will attach both files to the GitHub release automatically.
 
 For Packagist, connect the GitHub repository in Packagist so updates are detected through the Packagist GitHub integration. Reference: [Packagist update hooks](https://packagist.org/about#how-to-update-packages).
 
-For npm publishing, configure npm trusted publishing for `@mattwiebe/ai-connector-for-local-ai` on npmjs.com and authorize the GitHub Actions workflow file `release.yml`. The workflow requests `id-token: write` and runs `npm publish` on tag builds, so no long-lived npm token is needed once trusted publishing is set up.
+For npm publishing, configure npm trusted publishing for `@mattwiebe/mw-local-ai-connector` on npmjs.com and authorize the GitHub Actions workflow file `release.yml`. The workflow requests `id-token: write` and runs `npm publish` on tag builds, so no long-lived npm token is needed once trusted publishing is set up.
 
 ## Composer / Packagist
 
@@ -124,7 +124,7 @@ This repository is ready to be consumed as a Composer package from Packagist or 
 The package name is:
 
 ```text
-mattwiebe/ai-connector-for-local-ai
+mattwiebe/mw-local-ai-connector
 ```
 
 It uses Composer package type `wordpress-plugin`, so Composer-based WordPress projects can install it into `wp-content/plugins` when the root project uses `composer/installers` with the usual installer paths.
@@ -135,7 +135,7 @@ Example root project setup:
 {
   "require": {
     "composer/installers": "^2.3",
-    "mattwiebe/ai-connector-for-local-ai": "^0.2"
+    "mattwiebe/mw-local-ai-connector": "^0.2"
   },
   "extra": {
     "installer-paths": {
@@ -152,7 +152,7 @@ If you want to consume it directly from GitHub before Packagist metadata refresh
   "repositories": [
     {
       "type": "vcs",
-      "url": "https://github.com/mattwiebe/ai-connector-for-local-ai"
+      "url": "https://github.com/mattwiebe/mw-local-ai-connector"
     }
   ]
 }
@@ -160,28 +160,28 @@ If you want to consume it directly from GitHub before Packagist metadata refresh
 
 ## WP Packages Compatibility
 
-[WP Packages](https://wp-packages.org/docs) mirrors active plugins and themes from the WordPress.org directory under names like `wp-plugin/plugin-name`. Because AI Connector for Local AI is hosted on GitHub and is not currently in the WordPress.org plugin directory, it will not appear there yet.
+[WP Packages](https://wp-packages.org/docs) mirrors active plugins and themes from the WordPress.org directory under names like `wp-plugin/plugin-name`. Because MW Local AI Connector is hosted on GitHub and is not currently in the WordPress.org plugin directory, it will not appear there yet.
 
 The repo is still compatible with the same Composer install flow described in the WP Packages docs:
 
 - it uses Composer package type `wordpress-plugin`
-- it sets a stable installer name of `ai-connector-for-local-ai`
+- it sets a stable installer name of `mw-local-ai-connector`
 - it works with the same root-level `composer/installers` configuration used for WP Packages packages
 
-So the practical path today is `mattwiebe/ai-connector-for-local-ai` via Packagist or a VCS repository. If the plugin is later published to WordPress.org, then a WP Packages entry would become possible under a `wp-plugin/...` package name.
+So the practical path today is `mattwiebe/mw-local-ai-connector` via Packagist or a VCS repository. If the plugin is later published to WordPress.org, then a WP Packages entry would become possible under a `wp-plugin/...` package name.
 
 ## npm Package
 
 The npm package name is:
 
 ```text
-@mattwiebe/ai-connector-for-local-ai
+@mattwiebe/mw-local-ai-connector
 ```
 
 Preferred usage:
 
 ```bash
-npm install -g @mattwiebe/ai-connector-for-local-ai
+npm install -g @mattwiebe/mw-local-ai-connector
 laiproxy init
 laiproxy up
 ```
@@ -199,16 +199,16 @@ laiproxy uninstall
 It also works without installation:
 
 ```bash
-npx @mattwiebe/ai-connector-for-local-ai up
-npx @mattwiebe/ai-connector-for-local-ai init
+npx @mattwiebe/mw-local-ai-connector up
+npx @mattwiebe/mw-local-ai-connector init
 ```
 
-The package also exposes `ai-connector-for-local-ai` as a longer alias, but `laiproxy` is the intended global command.
+The package also exposes `mw-local-ai-connector` as a longer alias, but `laiproxy` is the intended global command.
 
 The npm CLI stores its persistent config in:
 
 ```text
-~/.config/ai-connector-for-local-ai/.env
+~/.config/mw-local-ai-connector/.env
 ```
 
 That keeps `npx` usage stateful across runs instead of writing config into a temporary install directory.
@@ -219,7 +219,7 @@ Based on npm’s current docs for scoped public packages, the publish flow is:
 
 1. Create or sign in to your npm account with `npm login`.
 2. Make sure the package name is available:
-   `npm view @mattwiebe/ai-connector-for-local-ai`
+   `npm view @mattwiebe/mw-local-ai-connector`
 3. Inspect exactly what would be published:
    `npm pack --dry-run`
 4. Configure npm trusted publishing for the package on npmjs.com using this repository and the `release.yml` workflow.

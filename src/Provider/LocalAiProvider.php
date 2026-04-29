@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace WordPress\AiConnectorForLocalAi\Provider;
+namespace Mattwiebe\LocalAiConnector\Provider;
 
 use WordPress\AiClient\Providers\ApiBasedImplementation\AbstractApiProvider;
 use WordPress\AiClient\Providers\ApiBasedImplementation\ListModelsApiBasedProviderAvailability;
@@ -14,8 +14,8 @@ use WordPress\AiClient\Providers\Http\Enums\RequestAuthenticationMethod;
 use WordPress\AiClient\Common\Exception\RuntimeException;
 use WordPress\AiClient\Providers\Models\Contracts\ModelInterface;
 use WordPress\AiClient\Providers\Models\DTO\ModelMetadata;
-use WordPress\AiConnectorForLocalAi\Metadata\LocalAiModelMetadataDirectory;
-use WordPress\AiConnectorForLocalAi\Models\LocalAiTextGenerationModel;
+use Mattwiebe\LocalAiConnector\Metadata\LocalAiModelMetadataDirectory;
+use Mattwiebe\LocalAiConnector\Models\LocalAiTextGenerationModel;
 
 /**
  * AI provider for Local AI.
@@ -71,7 +71,7 @@ class LocalAiProvider extends AbstractApiProvider {
 			ProviderTypeEnum::server(),
 			null,
 			RequestAuthenticationMethod::apiKey(),
-			__( 'Run AI inference on your own hardware using local models.', 'ai-connector-for-local-ai' ),
+			__( 'Run AI inference on your own hardware using local models.', 'mw-local-ai-connector' ),
 			__DIR__ . '/../../assets/logo.svg'
 		);
 	}

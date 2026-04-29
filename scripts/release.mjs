@@ -11,10 +11,10 @@ const SCRIPT_DIR = dirname( fileURLToPath( import.meta.url ) );
 const ROOT_DIR = dirname( SCRIPT_DIR );
 const PACKAGE_JSON_PATH = join( ROOT_DIR, 'package.json' );
 const PACKAGE_LOCK_PATH = join( ROOT_DIR, 'package-lock.json' );
-const PLUGIN_PATH = join( ROOT_DIR, 'plugin.php' );
+const PLUGIN_PATH = join( ROOT_DIR, 'mw-local-ai-connector.php' );
 const README_TXT_PATH = join( ROOT_DIR, 'readme.txt' );
 const RELEASE_WORKFLOW = 'release.yml';
-const REPO = 'mattwiebe/ai-connector-for-local-ai';
+const REPO = 'mattwiebe/mw-local-ai-connector';
 
 function run( command, args, options = {} ) {
 	return execFileSync( command, args, {
@@ -104,7 +104,7 @@ function getPluginVersion() {
 	const match = pluginPhp.match( /^\s*\*\s+Version:\s+(.+)$/m );
 
 	if ( ! match ) {
-		throw new Error( 'Could not find plugin version header in plugin.php.' );
+		throw new Error( 'Could not find plugin version header in mw-local-ai-connector.php.' );
 	}
 
 	return match[1].trim();
@@ -148,7 +148,7 @@ function ensureVersionAlignment() {
 
 	if ( packageVersion !== pluginVersion ) {
 		throw new Error(
-			`Version mismatch: package.json is ${ packageVersion }, plugin.php is ${ pluginVersion }.`
+			`Version mismatch: package.json is ${ packageVersion }, mw-local-ai-connector.php is ${ pluginVersion }.`
 		);
 	}
 
@@ -235,7 +235,7 @@ async function promptYesNo( question, defaultValue = true ) {
 }
 
 function commitVersionBump( version ) {
-	run( 'git', [ 'add', 'package.json', 'package-lock.json', 'plugin.php', 'readme.txt' ], { stdio: 'inherit' } );
+	run( 'git', [ 'add', 'package.json', 'package-lock.json', 'mw-local-ai-connector.php', 'readme.txt' ], { stdio: 'inherit' } );
 	run( 'git', [ 'commit', '-m', `Bump version to ${ version }` ], { stdio: 'inherit' } );
 }
 
@@ -337,7 +337,7 @@ function publishNpmRelease( otp ) {
 function printManualNpmStep( version ) {
 	console.log( '' );
 	console.log( 'npm publish can be handled by the GitHub release workflow via trusted publishing.' );
-	console.log( `If trusted publishing is not configured yet, run manually: npm publish --otp=<code>  # publishes @mattwiebe/ai-connector-for-local-ai@${ version }` );
+	console.log( `If trusted publishing is not configured yet, run manually: npm publish --otp=<code>  # publishes @mattwiebe/mw-local-ai-connector@${ version }` );
 }
 
 async function main() {
@@ -389,9 +389,9 @@ async function main() {
 	console.log( '  Packagist: updates should flow through the connected Packagist GitHub integration.' );
 
 	if ( options.publishNpm ) {
-		console.log( `  npm: published @mattwiebe/ai-connector-for-local-ai@${ version }` );
+		console.log( `  npm: published @mattwiebe/mw-local-ai-connector@${ version }` );
 	} else {
-		console.log( `  npm: published by GitHub Actions if trusted publishing is configured for @mattwiebe/ai-connector-for-local-ai` );
+		console.log( `  npm: published by GitHub Actions if trusted publishing is configured for @mattwiebe/mw-local-ai-connector` );
 	}
 }
 

@@ -1,5 +1,5 @@
 {
-    "name": "mattwiebe/ai-connector-for-local-ai",
+    "name": "mattwiebe/mw-local-ai-connector",
     "description": "WordPress AI provider plugin and local proxy for self-hosted inference.",
     "type": "wordpress-plugin",
     "keywords": [
@@ -10,7 +10,7 @@
         "tailscale",
         "inference"
     ],
-    "homepage": "https://github.com/mattwiebe/ai-connector-for-local-ai",
+    "homepage": "https://github.com/mattwiebe/mw-local-ai-connector",
     "license": "GPL-2.0-or-later",
     "authors": [
         {
@@ -19,9 +19,9 @@
         }
     ],
     "support": {
-        "issues": "https://github.com/mattwiebe/ai-connector-for-local-ai/issues",
-        "source": "https://github.com/mattwiebe/ai-connector-for-local-ai",
-        "docs": "https://github.com/mattwiebe/ai-connector-for-local-ai#readme"
+        "issues": "https://github.com/mattwiebe/mw-local-ai-connector/issues",
+        "source": "https://github.com/mattwiebe/mw-local-ai-connector",
+        "docs": "https://github.com/mattwiebe/mw-local-ai-connector#readme"
     },
     "require": {
         "php": "^7.4 || ^8.0"
@@ -32,7 +32,7 @@
         ]
     },
     "extra": {
-        "installer-name": "ai-connector-for-local-ai",
+        "installer-name": "mw-local-ai-connector",
         "branch-alias": {
             "dev-main": "0.2.x-dev"
         }
@@ -43,7 +43,7 @@
     },
     "scripts": {
         "lint": [
-            "php -l plugin.php",
+            "php -l mw-local-ai-connector.php",
             "find bin -name '*.sh' -print0 | xargs -0 -n1 bash -n",
             "find src tests/phpunit -name '*.php' -print0 | xargs -0 -n1 php -l"
         ],

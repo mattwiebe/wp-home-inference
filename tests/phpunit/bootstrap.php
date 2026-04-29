@@ -17,7 +17,7 @@ require_once dirname( __DIR__, 2 ) . '/vendor/autoload.php';
 require_once $_tests_dir . '/includes/functions.php';
 
 function _local_ai_manually_load_plugin(): void {
-	require dirname( __DIR__, 2 ) . '/plugin.php';
+	require dirname( __DIR__, 2 ) . '/mw-local-ai-connector.php';
 }
 tests_add_filter( 'muplugins_loaded', '_local_ai_manually_load_plugin' );
 

@@ -11,16 +11,16 @@ import { ENV_PATH as DEFAULT_ENV_PATH, getEffectiveConfig, hasUsableConfig, writ
 
 const SCRIPT_DIR = dirname( fileURLToPath( import.meta.url ) );
 const ROOT_DIR = dirname( SCRIPT_DIR );
-const BIN_PATH = join( ROOT_DIR, 'bin', 'ai-connector-for-local-ai.mjs' );
+const BIN_PATH = join( ROOT_DIR, 'bin', 'mw-local-ai-connector.mjs' );
 const PACKAGE_JSON = JSON.parse( readFileSync( join( ROOT_DIR, 'package.json' ), 'utf8' ) );
 const VERSION = PACKAGE_JSON.version;
-const LABEL = 'com.mattwiebe.ai-connector-for-local-ai';
+const LABEL = 'com.mattwiebe.mw-local-ai-connector';
 const LAUNCH_AGENTS_DIR = join( homedir(), 'Library', 'LaunchAgents' );
 const PLIST_PATH = join( LAUNCH_AGENTS_DIR, `${ LABEL }.plist` );
-const LOG_DIR = join( homedir(), 'Library', 'Logs', 'ai-connector-for-local-ai' );
+const LOG_DIR = join( homedir(), 'Library', 'Logs', 'mw-local-ai-connector' );
 const STDOUT_PATH = join( LOG_DIR, 'stdout.log' );
 const STDERR_PATH = join( LOG_DIR, 'stderr.log' );
-const ENV_PATH = process.env.AI_CONNECTOR_FOR_LOCAL_AI_ENV_PATH || DEFAULT_ENV_PATH;
+const ENV_PATH = process.env.MW_LOCAL_AI_CONNECTOR_ENV_PATH || DEFAULT_ENV_PATH;
 const UID = typeof process.getuid === 'function' ? String( process.getuid() ) : '';
 const DOMAIN = UID ? `gui/${ UID }` : '';
 const SERVICE_TARGET = DOMAIN ? `${ DOMAIN }/${ LABEL }` : '';
@@ -97,7 +97,7 @@ ${ plistArray( [ process.execPath, BIN_PATH, 'up' ] ) }
 \t<dict>
 ${ plistEnv( {
 		PATH: process.env.PATH || '',
-		AI_CONNECTOR_FOR_LOCAL_AI_ENV_PATH: ENV_PATH,
+		MW_LOCAL_AI_CONNECTOR_ENV_PATH: ENV_PATH,
 	} ) }
 \t</dict>
 \t<key>WorkingDirectory</key>

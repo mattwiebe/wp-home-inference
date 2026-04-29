@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 
 import {
+	buildLocalhostBackendUrl,
 	buildPublicUrl,
 	formatRequestLogMessage,
 	FUNNEL_PORT_CHOICES,
@@ -10,6 +11,7 @@ import {
 	parseBooleanEnv,
 	parseEnvFile,
 	parseNumberOrFallback,
+	parsePortNumber,
 	PLUGIN_RELEASES_URL,
 } from '../../local/server.mjs';
 
@@ -52,6 +54,21 @@ test( 'parseBooleanEnv and parseNumberOrFallback normalize persisted values', ()
 	assert.equal( parseNumberOrFallback( 'not-a-number', 8443 ), 8443 );
 } );
 
+test( 'parsePortNumber validates TCP port numbers', () => {
+	assert.equal( parsePortNumber( '1234' ), 1234 );
+	assert.equal( parsePortNumber( ' 8080 ' ), 8080 );
+	assert.equal( parsePortNumber( '0' ), null );
+	assert.equal( parsePortNumber( '65536' ), null );
+	assert.equal( parsePortNumber( '1234.5' ), null );
+	assert.equal( parsePortNumber( '1e3' ), null );
+	assert.equal( parsePortNumber( 'not-a-port' ), null );
+} );
+
+test( 'buildLocalhostBackendUrl creates backend URL from a port', () => {
+	assert.equal( buildLocalhostBackendUrl( '1234' ), 'http://localhost:1234' );
+	assert.equal( buildLocalhostBackendUrl( 'not-a-port' ), '' );
+} );
+
 test( 'getRequestSource prefers forwarded headers and includes host context', () => {
 	const req = {
 		headers: {
@@ -84,5 +101,5 @@ test( 'formatRequestLogMessage includes status, method, path, and source', () =>
 } );
 
 test( 'plugin releases URL points to the GitHub latest release page', () => {
-	assert.equal( PLUGIN_RELEASES_URL, 'https://github.com/mattwiebe/ai-connector-for-local-ai/releases/latest' );
+	assert.equal( PLUGIN_RELEASES_URL, 'https://github.com/mattwiebe/mw-local-ai-connector/releases/latest' );
 } );

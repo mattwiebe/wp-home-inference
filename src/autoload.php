@@ -1,10 +1,10 @@
 <?php
 /**
- * PSR-4 autoloader for the AI Connector for Local AI package.
+ * PSR-4 autoloader for the MW Local AI Connector plugin.
  *
  * @since 0.1.0
  *
- * @package WordPress\AiConnectorForLocalAi
+ * @package Mattwiebe\LocalAiConnector
  */
 
 declare(strict_types=1);
@@ -14,7 +14,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 spl_autoload_register( static function ( string $class ): void {
-	$prefix  = 'WordPress\\AiConnectorForLocalAi\\';
+	$prefix  = 'Mattwiebe\\LocalAiConnector\\';
 	$base_dir = __DIR__ . '/';
 
 	$len = strlen( $prefix );

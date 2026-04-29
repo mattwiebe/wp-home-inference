@@ -4,7 +4,7 @@
  * Replaces the default API key form with a link to the plugin's setup page for
  * each provider managed by this plugin.
  *
- * @package WordPress\AiConnectorForLocalAi
+ * @package Mattwiebe\LocalAiConnector
  */
 
 import {

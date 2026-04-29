@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace WordPress\AiConnectorForLocalAi\Models;
+namespace Mattwiebe\LocalAiConnector\Models;
 
 use WordPress\AiClient\Providers\Http\DTO\Request;
 use WordPress\AiClient\Providers\Http\DTO\RequestOptions;
@@ -10,7 +10,7 @@ use WordPress\AiClient\Providers\Http\Enums\HttpMethodEnum;
 use WordPress\AiClient\Providers\OpenAiCompatibleImplementation\AbstractOpenAiCompatibleTextGenerationModel;
 use WordPress\AiClient\Providers\DTO\ProviderMetadata;
 use WordPress\AiClient\Providers\Models\DTO\ModelMetadata;
-use WordPress\AiConnectorForLocalAi\Provider\LocalAiProvider;
+use Mattwiebe\LocalAiConnector\Provider\LocalAiProvider;
 
 /**
  * Text generation model for Local AI using the OpenAI-compatible Chat Completions API.

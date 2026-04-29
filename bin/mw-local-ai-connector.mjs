@@ -8,7 +8,7 @@ import { fileURLToPath } from 'node:url';
 
 const BIN_DIR = dirname( fileURLToPath( import.meta.url ) );
 const ROOT_DIR = dirname( BIN_DIR );
-const CONFIG_PATH = join( homedir(), '.config', 'ai-connector-for-local-ai', '.env' );
+const CONFIG_PATH = join( homedir(), '.config', 'mw-local-ai-connector', '.env' );
 const PACKAGE_JSON_PATH = join( ROOT_DIR, 'package.json' );
 const PACKAGE_JSON = JSON.parse( readFileSync( PACKAGE_JSON_PATH, 'utf8' ) );
 const VERSION = PACKAGE_JSON.version;
@@ -116,7 +116,7 @@ function main() {
 			stdio: 'inherit',
 			env: {
 				...process.env,
-				AI_CONNECTOR_FOR_LOCAL_AI_ENV_PATH: process.env.AI_CONNECTOR_FOR_LOCAL_AI_ENV_PATH || CONFIG_PATH,
+				MW_LOCAL_AI_CONNECTOR_ENV_PATH: process.env.MW_LOCAL_AI_CONNECTOR_ENV_PATH || CONFIG_PATH,
 			},
 		}
 	);

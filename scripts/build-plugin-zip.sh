@@ -4,9 +4,9 @@ set -euo pipefail
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 DIST_DIR="$ROOT_DIR/dist"
 STAGING_DIR="$DIST_DIR/staging"
-PACKAGE_SLUG="ai-connector-for-local-ai"
+PACKAGE_SLUG="mw-local-ai-connector"
 PACKAGE_DIR="$STAGING_DIR/$PACKAGE_SLUG"
-ZIP_PATH="$DIST_DIR/ai-connector-for-local-ai-plugin.zip"
+ZIP_PATH="$DIST_DIR/${PACKAGE_SLUG}-plugin.zip"
 
 rm -rf "$STAGING_DIR" "$ZIP_PATH"
 mkdir -p "$PACKAGE_DIR"

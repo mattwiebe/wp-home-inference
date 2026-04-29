@@ -1,8 +1,10 @@
-# AI Connector for Local AI
+# MW Local AI Connector
 
-AI Connector for Local AI is a WordPress AI provider plugin plus a small local proxy for running inference against models on your own machine.
+MW Local AI Connector is a WordPress AI provider plugin plus a small local proxy for running inference against models on your own machine.
 
 It is built for WordPress 7.0+ and the new Connectors primitives. The WordPress plugin runs on the remote site. The local proxy runs on a machine you control, talks to an OpenAI-compatible local backend such as Ollama or LM Studio, and exposes that backend to WordPress through an authenticated Tailscale Funnel.
+
+This is an independent project by Matt Wiebe. It is not affiliated with, endorsed by, or sponsored by Actual Computer, Tailscale, Ollama, LM Studio, or any other third-party service it can be configured to talk to.
 
 ## What It Does
 
@@ -18,7 +20,7 @@ It is built for WordPress 7.0+ and the new Connectors primitives. The WordPress 
 
 ## Repository Layout
 
-- [`plugin.php`](plugin.php): WordPress plugin bootstrap, settings UI, connector registration.
+- [`mw-local-ai-connector.php`](mw-local-ai-connector.php): WordPress plugin bootstrap, settings UI, connector registration.
 - [`src/`](src): provider, model, and metadata directory classes.
 - [`local/server.mjs`](local/server.mjs): local proxy and Tailscale Funnel entrypoint.
 
@@ -27,14 +29,15 @@ It is built for WordPress 7.0+ and the new Connectors primitives. The WordPress 
 - WordPress `7.0+`
 - PHP `7.4+`
 - Node.js `18+` with native `fetch`
-- One local OpenAI-compatible backend, currently tested against:
+- One local OpenAI-compatible backend, such as:
   - Ollama
   - LM Studio
+  - another localhost backend by port number
 - Tailscale, if you want public exposure through Funnel
 
 ## WordPress Plugin Setup
 
-1. Copy this plugin into `wp-content/plugins/ai-connector-for-local-ai`.
+1. Copy this plugin into `wp-content/plugins/mw-local-ai-connector`.
 2. Activate the plugin in WordPress.
 3. Open `Settings > Connectors` or the dedicated Local AI settings page.
 4. Enter:
@@ -49,7 +52,7 @@ The Connectors screen links back to this setup page.
 Preferred install path:
 
 ```bash
-npm install -g @mattwiebe/ai-connector-for-local-ai
+npm install -g @mattwiebe/mw-local-ai-connector
 ```
 
 Then initialize and run the proxy with:
@@ -73,8 +76,8 @@ laiproxy uninstall
 You can also run it without a global install:
 
 ```bash
-npx @mattwiebe/ai-connector-for-local-ai init
-npx @mattwiebe/ai-connector-for-local-ai up
+npx @mattwiebe/mw-local-ai-connector init
+npx @mattwiebe/mw-local-ai-connector up
 ```
 
 For local development from this repo, you can still use:
@@ -92,11 +95,13 @@ npm run service:uninstall
 
 That guided setup will:
 
-- detect or prompt for the backend URL,
+- detect known backends or ask for the localhost backend port,
 - generate or accept an API key,
 - ask whether to enable Tailscale Funnel,
 - ask which public Funnel port to use, defaulting to `8443`,
 - save everything into `local/.env`.
+
+When Funnel starts, the proxy also checks public DNS for the generated `ts.net` hostname. If public DNS has not propagated yet, WordPress may temporarily report `Could not resolve host`; Tailscale says Funnel DNS propagation can take up to 10 minutes.
 
 After that, normal startup is non-interactive:
 
@@ -110,7 +115,7 @@ To reconfigure later:
 laiproxy init
 ```
 
-On macOS, `laiproxy install` or `npm run service:install` writes a LaunchAgent at `~/Library/LaunchAgents/com.mattwiebe.ai-connector-for-local-ai.plist` so the proxy can keep running in the background across logins.
+On macOS, `laiproxy install` or `npm run service:install` writes a LaunchAgent at `~/Library/LaunchAgents/com.mattwiebe.mw-local-ai-connector.plist` so the proxy can keep running in the background across logins.
 
 To rotate the shared API key in the persisted `.env` file and print the new key:
 

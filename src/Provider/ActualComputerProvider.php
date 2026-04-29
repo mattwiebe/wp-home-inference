@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace WordPress\AiConnectorForLocalAi\Provider;
+namespace Mattwiebe\LocalAiConnector\Provider;
 
 use WordPress\AiClient\Common\Exception\RuntimeException;
 use WordPress\AiClient\Providers\ApiBasedImplementation\AbstractApiProvider;
@@ -14,8 +14,8 @@ use WordPress\AiClient\Providers\Enums\ProviderTypeEnum;
 use WordPress\AiClient\Providers\Http\Enums\RequestAuthenticationMethod;
 use WordPress\AiClient\Providers\Models\Contracts\ModelInterface;
 use WordPress\AiClient\Providers\Models\DTO\ModelMetadata;
-use WordPress\AiConnectorForLocalAi\Metadata\ActualComputerModelMetadataDirectory;
-use WordPress\AiConnectorForLocalAi\Models\ActualComputerTextGenerationModel;
+use Mattwiebe\LocalAiConnector\Metadata\ActualComputerModelMetadataDirectory;
+use Mattwiebe\LocalAiConnector\Models\ActualComputerTextGenerationModel;
 
 /**
  * AI provider for Actual Computer.
@@ -63,7 +63,7 @@ class ActualComputerProvider extends AbstractApiProvider {
 			ProviderTypeEnum::server(),
 			null,
 			RequestAuthenticationMethod::apiKey(),
-			__( 'Connect WordPress AI to an Actual Computer endpoint.', 'ai-connector-for-local-ai' ),
+			__( 'Connect WordPress AI to an Actual Computer endpoint.', 'mw-local-ai-connector' ),
 			__DIR__ . '/../../assets/logo.svg'
 		);
 	}
