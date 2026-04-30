@@ -1,5 +1,5 @@
 {
-    "name": "mattwiebe/mw-local-ai-connector",
+    "name": "mattwiebe/ai-connector-for-local-ai",
     "description": "WordPress AI provider plugin and local proxy for self-hosted inference.",
     "type": "wordpress-plugin",
     "keywords": [

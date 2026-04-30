@@ -109,7 +109,7 @@ function provider_definitions(): array {
 					array(
 						'heading'  => __( 'Step 3: Install and start the Local AI proxy', 'mw-local-ai-connector' ),
 						'body'     => __( 'On your home computer, install the published CLI and run the setup command:', 'mw-local-ai-connector' ),
-						'commands' => array( 'npm install -g @mattwiebe/mw-local-ai-connector && laiproxy init', 'laiproxy up', 'laiproxy install' ),
+						'commands' => array( 'npm install -g @mattwiebe/ai-connector-for-local-ai && laiproxy init', 'laiproxy up', 'laiproxy install' ),
 						'notes'    => array(
 							__( 'This configures the proxy, auto-detects your local backend, optionally starts Tailscale Funnel, and saves the connection details for future runs.', 'mw-local-ai-connector' ),
 							__( 'If you are working from this repo instead of a global npm install, the equivalent commands are `npm run init`, `npm run up`, and `npm run service:install`.', 'mw-local-ai-connector' ),
