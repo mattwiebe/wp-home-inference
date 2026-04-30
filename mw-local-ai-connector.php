@@ -5,7 +5,7 @@
  * Description: AI providers for routing AI requests to your own machine.
  * Requires at least: 7.0
  * Requires PHP: 7.4
- * Version: 0.2.4
+ * Version: 0.3.0
  * Author: Matt Wiebe
  * License: GPL-2.0-or-later
  * License URI: https://spdx.org/licenses/GPL-2.0-or-later.html
@@ -425,7 +425,7 @@ add_filter( 'script_module_data_managed-connectors', __NAMESPACE__ . '\\connecto
 /**
  * Returns the admin page hook suffixes used by managed providers.
  *
- * @since 0.2.5
+ * @since 0.3.0
  *
  * @return list<string>
  */
@@ -442,7 +442,7 @@ function get_admin_page_hooks(): array {
 /**
  * Enqueues styles and scripts for managed provider settings pages.
  *
- * @since 0.2.5
+ * @since 0.3.0
  *
  * @param string $hook_suffix The current admin page hook.
  */
@@ -483,7 +483,7 @@ add_action( 'admin_enqueue_scripts', __NAMESPACE__ . '\\enqueue_admin_settings_a
 /**
  * Returns the plugin version from its header.
  *
- * @since 0.2.5
+ * @since 0.3.0
  *
  * @return string
  */
@@ -588,7 +588,7 @@ add_action( 'init', __NAMESPACE__ . '\\register_settings', 20 );
 /**
  * Sanitizes a stored endpoint URL.
  *
- * @since 0.2.5
+ * @since 0.3.0
  *
  * @param mixed $value Raw submitted value.
  * @return string

@@ -1,6 +1,6 @@
 {
   "name": "@mattwiebe/ai-connector-for-local-ai",
-  "version": "0.2.4",
+  "version": "0.3.0",
   "description": "CLI and WordPress plugin for routing AI inference to models running on your own machine.",
   "type": "module",
   "bin": {

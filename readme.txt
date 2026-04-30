@@ -4,7 +4,7 @@ Tags: ai, connectors, inference, openai, models
 Requires at least: 7.0
 Tested up to: 7.0
 Requires PHP: 7.4
-Stable tag: 0.2.4
+Stable tag: 0.3.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -63,7 +63,7 @@ If you do not configure either connector, this plugin makes no outbound network 
 
 == Changelog ==
 
-= 0.2.5 =
+= 0.3.0 =
 
 * Rename the plugin to "MW Local AI Connector" with the slug `mw-local-ai-connector` and the text domain `mw-local-ai-connector`.
 * Move the main plugin file to `mw-local-ai-connector.php` to match the plugin slug.

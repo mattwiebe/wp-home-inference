@@ -337,7 +337,7 @@ function publishNpmRelease( otp ) {
 function printManualNpmStep( version ) {
 	console.log( '' );
 	console.log( 'npm publish can be handled by the GitHub release workflow via trusted publishing.' );
-	console.log( `If trusted publishing is not configured yet, run manually: npm publish --otp=<code>  # publishes @mattwiebe/mw-local-ai-connector@${ version }` );
+	console.log( `If trusted publishing is not configured yet, run manually: npm publish --otp=<code>  # publishes @mattwiebe/ai-connector-for-local-ai@${ version }` );
 }
 
 async function main() {
@@ -389,9 +389,9 @@ async function main() {
 	console.log( '  Packagist: updates should flow through the connected Packagist GitHub integration.' );
 
 	if ( options.publishNpm ) {
-		console.log( `  npm: published @mattwiebe/mw-local-ai-connector@${ version }` );
+		console.log( `  npm: published @mattwiebe/ai-connector-for-local-ai@${ version }` );
 	} else {
-		console.log( `  npm: published by GitHub Actions if trusted publishing is configured for @mattwiebe/mw-local-ai-connector` );
+		console.log( `  npm: published by GitHub Actions if trusted publishing is configured for @mattwiebe/ai-connector-for-local-ai` );
 	}
 }
 

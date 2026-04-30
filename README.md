@@ -52,7 +52,7 @@ The Connectors screen links back to this setup page.
 Preferred install path:
 
 ```bash
-npm install -g @mattwiebe/mw-local-ai-connector
+npm install -g @mattwiebe/ai-connector-for-local-ai
 ```
 
 Then initialize and run the proxy with:
@@ -76,8 +76,8 @@ laiproxy uninstall
 You can also run it without a global install:
 
 ```bash
-npx @mattwiebe/mw-local-ai-connector init
-npx @mattwiebe/mw-local-ai-connector up
+npx @mattwiebe/ai-connector-for-local-ai init
+npx @mattwiebe/ai-connector-for-local-ai up
 ```
 
 For local development from this repo, you can still use:

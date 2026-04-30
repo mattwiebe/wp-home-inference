@@ -115,7 +115,7 @@ To cut a release:
 
 For Packagist, connect the GitHub repository in Packagist so updates are detected through the Packagist GitHub integration. Reference: [Packagist update hooks](https://packagist.org/about#how-to-update-packages).
 
-For npm publishing, configure npm trusted publishing for `@mattwiebe/mw-local-ai-connector` on npmjs.com and authorize the GitHub Actions workflow file `release.yml`. The workflow requests `id-token: write` and runs `npm publish` on tag builds, so no long-lived npm token is needed once trusted publishing is set up.
+For npm publishing, configure npm trusted publishing for `@mattwiebe/ai-connector-for-local-ai` on npmjs.com and authorize the GitHub Actions workflow file `release.yml`. The workflow requests `id-token: write` and runs `npm publish` on tag builds, so no long-lived npm token is needed once trusted publishing is set up.
 
 ## Composer / Packagist
 
@@ -124,7 +124,7 @@ This repository is ready to be consumed as a Composer package from Packagist or 
 The package name is:
 
 ```text
-mattwiebe/mw-local-ai-connector
+mattwiebe/ai-connector-for-local-ai
 ```
 
 It uses Composer package type `wordpress-plugin`, so Composer-based WordPress projects can install it into `wp-content/plugins` when the root project uses `composer/installers` with the usual installer paths.
@@ -135,7 +135,7 @@ Example root project setup:
 {
   "require": {
     "composer/installers": "^2.3",
-    "mattwiebe/mw-local-ai-connector": "^0.2"
+    "mattwiebe/ai-connector-for-local-ai": "^0.3"
   },
   "extra": {
     "installer-paths": {
@@ -168,20 +168,20 @@ The repo is still compatible with the same Composer install flow described in th
 - it sets a stable installer name of `mw-local-ai-connector`
 - it works with the same root-level `composer/installers` configuration used for WP Packages packages
 
-So the practical path today is `mattwiebe/mw-local-ai-connector` via Packagist or a VCS repository. If the plugin is later published to WordPress.org, then a WP Packages entry would become possible under a `wp-plugin/...` package name.
+So the practical path today is `mattwiebe/ai-connector-for-local-ai` via Packagist or a VCS repository. If the plugin is later published to WordPress.org, then a WP Packages entry would become possible under a `wp-plugin/...` package name.
 
 ## npm Package
 
 The npm package name is:
 
 ```text
-@mattwiebe/mw-local-ai-connector
+@mattwiebe/ai-connector-for-local-ai
 ```
 
 Preferred usage:
 
 ```bash
-npm install -g @mattwiebe/mw-local-ai-connector
+npm install -g @mattwiebe/ai-connector-for-local-ai
 laiproxy init
 laiproxy up
 ```
@@ -199,8 +199,8 @@ laiproxy uninstall
 It also works without installation:
 
 ```bash
-npx @mattwiebe/mw-local-ai-connector up
-npx @mattwiebe/mw-local-ai-connector init
+npx @mattwiebe/ai-connector-for-local-ai up
+npx @mattwiebe/ai-connector-for-local-ai init
 ```
 
 The package also exposes `mw-local-ai-connector` as a longer alias, but `laiproxy` is the intended global command.
@@ -219,7 +219,7 @@ Based on npm’s current docs for scoped public packages, the publish flow is:
 
 1. Create or sign in to your npm account with `npm login`.
 2. Make sure the package name is available:
-   `npm view @mattwiebe/mw-local-ai-connector`
+   `npm view @mattwiebe/ai-connector-for-local-ai`
 3. Inspect exactly what would be published:
    `npm pack --dry-run`
 4. Configure npm trusted publishing for the package on npmjs.com using this repository and the `release.yml` workflow.
