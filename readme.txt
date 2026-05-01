@@ -81,8 +81,8 @@ If you do not configure either connector, this plugin makes no outbound network 
 
 = 0.3.0 =
 
-* Rename the plugin to "MW Local AI Connector" with the slug `mw-local-ai-connector` and the text domain `mw-local-ai-connector`.
-* Move the main plugin file to `mw-local-ai-connector.php` to match the plugin slug.
+* Rename the plugin to "MW Local AI Connector" while retaining the package text domain `ai-connector-for-local-ai`.
+* Move the main plugin file to `mw-local-ai-connector.php` to match the plugin name.
 * Move the inline admin settings CSS and JavaScript into separate enqueued assets.
 * Document the third-party services this plugin can connect to.
 
