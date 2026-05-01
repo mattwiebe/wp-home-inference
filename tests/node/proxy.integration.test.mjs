@@ -316,12 +316,16 @@ test( 'proxy restarts when its env file changes', { timeout: 15000 }, async ( t 
 	await waitForProxyReady( proxy );
 	await waitForModels( proxyPort, [ 'one/alpha' ] );
 
+	// Startup output is printed before the main process registers watchFile().
+	// Give the watcher one polling interval before changing the env file.
+	await delay( 1200 );
+
 	writeProxyEnv( envPath, {
 		port: proxyPort,
 		providers: [ `two:${ two.port }` ],
 	} );
 
-	await waitForModels( proxyPort, [ 'two/gamma' ] );
+	await waitForModels( proxyPort, [ 'two/gamma' ], 12000 );
 	assert.match( proxy.output, /changed; restarting proxy/ );
 	assert.match( proxy.output, /Restart complete/ );
 } );
