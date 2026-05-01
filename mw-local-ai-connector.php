@@ -5,7 +5,7 @@
  * Description: AI providers for routing AI requests to your own machine.
  * Requires at least: 7.0
  * Requires PHP: 7.4
- * Version: 0.4.0
+ * Version: 0.4.1
  * Author: Matt Wiebe
  * License: GPL-2.0-or-later
  * License URI: https://spdx.org/licenses/GPL-2.0-or-later.html
