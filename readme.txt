@@ -39,16 +39,16 @@ It uses `https://api.actual.inc/v1`.
 
 == External services ==
 
-This plugin can connect to two third-party services. Both connections only happen after you explicitly configure the matching connector in the WordPress admin and either save it or trigger an AI request through the WordPress AI Client.
+This plugin can connect to a user-controlled Local AI proxy and to the Actual Computer API. Connections only happen after you explicitly configure the matching connector in the WordPress admin and either save it or trigger an AI request through the WordPress AI Client.
 
 = Local AI proxy (user-controlled) =
 
-The Local AI connector sends requests to the OpenAI-compatible HTTPS endpoint URL that you enter on its settings page. This endpoint is intended to point at a proxy you run on your own machine (for example, in front of Ollama, llama.cpp, LM Studio, or vLLM).
+The Local AI connector sends requests to the OpenAI-compatible endpoint URL that you enter on its settings page. This endpoint is intended to point at a proxy you run on your own machine (for example, in front of Ollama, llama.cpp, LM Studio, vLLM, or multiple local providers at once).
 
-* What it sends: the prompts, messages, model selection, and any other AI parameters supplied by callers of the WordPress AI Client, plus a `Bearer` API key so the proxy can authenticate the request. It also calls `/v1/models` on this endpoint to populate the model selector in settings.
+* What it sends: the prompts, messages, provider-prefixed model selection, and any other AI parameters supplied by callers of the WordPress AI Client. If you configure an API key, it also sends that key as a `Bearer` token so the proxy can authenticate the request. It also calls `/v1/models` on this endpoint to populate the model selector in settings.
 * When it sends: when an admin saves connection details (model list refresh) and whenever WordPress generates a response through this connector.
 * Where it sends: the endpoint URL you configure on the Local AI settings screen. By default no endpoint is configured and no requests are made.
-* Because the endpoint is one you supply, this plugin cannot link a generic terms of service or privacy policy on your behalf — the applicable terms are those of whatever software (and, if you use Tailscale Funnel, whatever network operator) is running at that URL. Tailscale's terms and privacy policy are available at [https://tailscale.com/terms](https://tailscale.com/terms) and [https://tailscale.com/privacy-policy](https://tailscale.com/privacy-policy) if you choose to use Tailscale Funnel to expose the proxy.
+* Because the endpoint is one you supply, this plugin cannot link a generic terms of service or privacy policy on your behalf -- the applicable terms are those of whatever software and network operator is running at that URL. If you expose the proxy through Tailscale Funnel, Tailscale's terms and privacy policy are available at [https://tailscale.com/terms](https://tailscale.com/terms) and [https://tailscale.com/privacy-policy](https://tailscale.com/privacy-policy). If you expose it through Cloudflare Tunnel, Cloudflare's terms and privacy policy apply.
 
 = Actual Computer API =
 

@@ -13,6 +13,12 @@ Important: the public Funnel URL usually does not use the same port as the local
 Once the proxy is running:
 
 ```bash
+curl http://127.0.0.1:13531/v1/models
+```
+
+For Tailscale Funnel or Cloudflare Tunnel mode, include the API key shown by the proxy:
+
+```bash
 curl -H "Authorization: Bearer <api-key>" http://127.0.0.1:13531/v1/models
 ```
 
@@ -213,6 +219,19 @@ The npm CLI stores its persistent config in:
 
 That keeps `npx` usage stateful across runs instead of writing config into a temporary install directory.
 
+The local proxy can front multiple localhost OpenAI-compatible providers at once:
+
+```bash
+laiproxy up --provider ollama:11434 --provider lmstudio:1234 --tunnel local
+```
+
+Provider model IDs are exposed with the provider slug as a prefix, such as `ollama/llama3.2`. The proxy strips the prefix before forwarding requests to the matching local port. Public exposure is optional; use `--tunnel local`, `--tunnel tailscale`, or `--tunnel cloudflare`.
+Local mode does not require an API key; Tailscale and Cloudflare tunnel modes do.
+
+Provider slugs and localhost ports must be unique. A duplicate port fails startup with a clear configuration error.
+
+The running proxy watches its persisted `.env` file and restarts itself when that file changes.
+
 ## Publishing To npm
 
 Based on npm’s current docs for scoped public packages, the publish flow is:
@@ -234,8 +253,8 @@ This project is early, but the core loop is in place:
 - provider registration works,
 - settings save with nonce/capability protection via the WordPress Settings API,
 - API key handling preserves secrets as opaque values,
-- model choices come from the live proxy,
-- local proxy configuration persists in `local/.env`.
+- model choices come from the live proxy and include provider-prefixed IDs,
+- local proxy configuration persists in `~/.config/mw-local-ai-connector/.env` when run through the npm CLI.
 
 ## License
 
