@@ -31,7 +31,7 @@ This plugin is an independent project by Matt Wiebe and is not affiliated with, 
 
 = Does this plugin include the local proxy? =
 
-The WordPress plugin ships the connector and settings UI. The local proxy and CLI used for Local AI are maintained in the project repository for development and release purposes, but are not included in the production plugin zip.
+The WordPress plugin ships the connector and settings UI. The recommended local proxy and CLI is SLOProxy, published separately as the `sloproxy` npm package.
 
 = Which endpoint does the Actual Computer connector use? =
 
@@ -74,19 +74,16 @@ If you do not configure either connector, this plugin makes no outbound network 
 
 = 0.4.0 =
 
-* Add multi-provider local proxy support with provider-prefixed model IDs.
-* Add local-only, Tailscale Funnel, and Cloudflare Tunnel proxy modes.
-* Add local-only proxy mode without API-key authentication.
-* Add `.env` watching so the proxy restarts when configuration changes.
-* Add proxy integration tests for routing, model aggregation, config validation, and restart behavior.
+* Add support for provider-prefixed model IDs from a multi-provider local proxy.
+* Add support for local-only proxy mode without API-key authentication.
 
 = 0.3.2 =
 
-* Update the release workflow for npm trusted publishing requirements.
+* Update release workflow metadata.
 
 = 0.3.1 =
 
-* Fix release metadata and GitHub Actions npm publishing checks.
+* Fix release metadata and GitHub Actions checks.
 
 = 0.3.0 =
 

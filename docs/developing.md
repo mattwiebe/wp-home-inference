@@ -1,34 +1,11 @@
 # Developing
 
-## Ports
-
-- Local proxy port defaults to `13531`.
-- Tailscale Funnel public port defaults to `8443`.
-- Allowed Funnel public ports are `443`, `8443`, and `10000`.
-
-Important: the public Funnel URL usually does not use the same port as the local proxy. Tailscale listens on the selected public port and forwards traffic to the local proxy port.
-
-## Local Smoke Test
-
-Once the proxy is running:
-
-```bash
-curl http://127.0.0.1:13531/v1/models
-```
-
-For Tailscale Funnel or Cloudflare Tunnel mode, include the API key shown by the proxy:
-
-```bash
-curl -H "Authorization: Bearer <api-key>" http://127.0.0.1:13531/v1/models
-```
-
 ## Development
 
 Install project tooling:
 
 ```bash
 composer install
-npm ci
 ```
 
 Install the WordPress PHPUnit test suite:
@@ -44,39 +21,12 @@ Run the local checks:
 ```bash
 composer lint
 composer test
-npm run lint
-npm test
-```
-
-Cut a release from the repo:
-
-```bash
-npm run release
-```
-
-This command:
-
-- verifies version alignment between `package.json` and `mw-local-ai-connector.php`
-- requires a clean `main` branch worktree
-- if the target tag already exists, offers to bump to the next patch semver and continue
-- runs PHP lint plus Node verification
-- builds the plugin ZIP and npm tarball
-- creates and pushes the git tag
-- waits for the GitHub Release workflow to publish release assets
-- reports whether Packagist notification is configured in GitHub secrets
-
-Because npm publish is manual in this repo due OTP requirements, the default release command stops short of publishing to npm and prints the exact next command.
-
-If you want the command to publish to npm too, opt in explicitly:
-
-```bash
-npm run release -- --publish-npm --otp <code>
 ```
 
 Build a release ZIP locally:
 
 ```bash
-npm run build:plugin
+bash scripts/build-plugin-zip.sh
 ```
 
 That creates:
@@ -85,43 +35,26 @@ That creates:
 dist/mwlai-connector-plugin.zip
 ```
 
-Build the npm package tarball locally:
-
-```bash
-npm run build:npm
-```
-
-That creates:
-
-```text
-dist/mattwiebe-mwlai-connector-<version>.tgz
-```
-
 ## GitHub Automation
 
 This repository ships with GitHub Actions workflows for:
 
-- CI on pushes and pull requests
-  - PHP lint + real WordPress `WP_UnitTestCase` tests
-  - Node syntax check + Node tests
-- Release packaging on tags matching `v*`
-  - runs the full test suite,
-  - builds the WordPress plugin ZIP and npm tarball,
-  - publishes the npm package with trusted publishing,
-  - uploads both artifacts to the GitHub release.
+- CI on pushes and pull requests:
+  - PHP lint
+  - real WordPress `WP_UnitTestCase` tests
+- Release packaging on tags matching `v*`:
+  - runs PHP verification,
+  - builds the WordPress plugin ZIP,
+  - uploads the ZIP to the GitHub release.
 
 To cut a release:
 
-1. Make sure `package.json` and the plugin header version are aligned.
+1. Update the plugin header version and `Stable tag` in `readme.txt`.
 2. Create and push a semver tag like `v0.2.0`.
-3. GitHub Actions will build:
-   - `dist/mwlai-connector-plugin.zip`
-   - `dist/mattwiebe-mwlai-connector-<version>.tgz`
-4. The workflow will attach both files to the GitHub release automatically.
+3. GitHub Actions will build `dist/mwlai-connector-plugin.zip`.
+4. The workflow will attach the ZIP to the GitHub release automatically.
 
 For Packagist, connect the GitHub repository in Packagist so updates are detected through the Packagist GitHub integration. Reference: [Packagist update hooks](https://packagist.org/about#how-to-update-packages).
-
-For npm publishing, configure npm trusted publishing for `@mattwiebe/ai-connector-for-local-ai` on npmjs.com and authorize the GitHub Actions workflow file `release.yml`. The workflow requests `id-token: write` and runs `npm publish` on tag builds, so no long-lived npm token is needed once trusted publishing is set up.
 
 ## Composer / Packagist
 
@@ -176,85 +109,67 @@ The repo is still compatible with the same Composer install flow described in th
 
 So the practical path today is `mattwiebe/ai-connector-for-local-ai` via Packagist or a VCS repository. If the plugin is later published to WordPress.org, then a WP Packages entry would become possible under a `wp-plugin/...` package name.
 
-## npm Package
+## Recommended Proxy Helper
+
+The local proxy now lives in the separate SLOProxy repository:
+
+```text
+https://github.com/mattwiebe/sloproxy
+```
 
 The npm package name is:
 
 ```text
-@mattwiebe/ai-connector-for-local-ai
+sloproxy
 ```
 
 Preferred usage:
 
 ```bash
-npm install -g @mattwiebe/ai-connector-for-local-ai
-laiproxy init
-laiproxy up
+npm install -g sloproxy
+sloproxy init
+sloproxy up
 ```
 
 The CLI also exposes macOS service management:
 
 ```bash
-laiproxy install
-laiproxy start
-laiproxy stop
-laiproxy status
-laiproxy uninstall
+sloproxy install
+sloproxy start
+sloproxy stop
+sloproxy status
+sloproxy uninstall
 ```
 
 It also works without installation:
 
 ```bash
-npx @mattwiebe/ai-connector-for-local-ai up
-npx @mattwiebe/ai-connector-for-local-ai init
+npx sloproxy up
+npx sloproxy init
 ```
 
-The package also exposes `mwlai-connector` as a longer alias, but `laiproxy` is the intended global command.
-
-The npm CLI stores its persistent config in:
+SLOProxy stores persistent config in:
 
 ```text
-~/.config/mwlai-connector/.env
+~/.config/sloproxy/.env
 ```
-
-That keeps `npx` usage stateful across runs instead of writing config into a temporary install directory.
 
 The local proxy can front multiple localhost OpenAI-compatible providers at once:
 
 ```bash
-laiproxy up --provider ollama:11434 --provider lmstudio:1234 --tunnel local
+sloproxy up --provider ollama:11434 --provider lmstudio:1234 --tunnel local
 ```
 
 Provider model IDs are exposed with the provider slug as a prefix, such as `ollama/llama3.2`. The proxy strips the prefix before forwarding requests to the matching local port. Public exposure is optional; use `--tunnel local`, `--tunnel tailscale`, or `--tunnel cloudflare`.
-Local mode does not require an API key; Tailscale and Cloudflare tunnel modes do.
-
-Provider slugs and localhost ports must be unique. A duplicate port fails startup with a clear configuration error.
-
-The running proxy watches its persisted `.env` file and restarts itself when that file changes.
-
-## Publishing To npm
-
-Based on npm’s current docs for scoped public packages, the publish flow is:
-
-1. Create or sign in to your npm account with `npm login`.
-2. Make sure the package name is available:
-   `npm view @mattwiebe/ai-connector-for-local-ai`
-3. Inspect exactly what would be published:
-   `npm pack --dry-run`
-4. Configure npm trusted publishing for the package on npmjs.com using this repository and the `release.yml` workflow.
-5. Push a release tag so GitHub Actions runs `npm publish`.
-
-This repo already sets `publishConfig.access` to `public`, which is the required setting for a public scoped package according to npm’s docs.
 
 ## Current Status
 
-This project is early, but the core loop is in place:
+This project is early, but the core plugin loop is in place:
 
 - provider registration works,
 - settings save with nonce/capability protection via the WordPress Settings API,
 - API key handling preserves secrets as opaque values,
-- model choices come from the live proxy and include provider-prefixed IDs,
-- local proxy configuration persists in `~/.config/mwlai-connector/.env` when run through the npm CLI.
+- model choices come from the live proxy and include provider-prefixed IDs.
 
 ## License
 

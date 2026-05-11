@@ -6,9 +6,6 @@ on:
       - main
   pull_request:
 
-env:
-  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
-
 jobs:
   php:
     name: PHP
@@ -46,20 +43,3 @@ jobs:
 
       - name: Run PHP tests
         run: composer test
-
-  node:
-    name: Node
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v6
-
-      - uses: actions/setup-node@v6
-        with:
-          node-version: '24'
-          cache: npm
-
-      - name: Lint Node
-        run: npm run lint
-
-      - name: Run Node tests
-        run: npm test

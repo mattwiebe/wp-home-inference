@@ -111,7 +111,7 @@ function provider_definitions(): array {
 					array(
 						'heading'  => __( 'Step 3: Install and start the Local AI proxy', 'mw-local-ai-connector' ),
 						'body'     => __( 'On your home computer, install the published CLI and run the setup command:', 'mw-local-ai-connector' ),
-						'commands' => array( 'npm install -g @mattwiebe/ai-connector-for-local-ai && laiproxy init', 'laiproxy up', 'laiproxy install' ),
+						'commands' => array( 'npm install -g sloproxy && sloproxy init', 'sloproxy up', 'sloproxy install' ),
 						'notes'    => array(
 							__( 'This configures the proxy, scans for local providers, optionally starts a tunnel, and saves the connection details for future runs.', 'mw-local-ai-connector' ),
 						),
@@ -125,10 +125,8 @@ function provider_definitions(): array {
 			'info_card'             => array(
 				'heading'     => __( 'Server Info', 'mw-local-ai-connector' ),
 				'description' => __( 'Your local proxy should be started with:', 'mw-local-ai-connector' ),
-				'commands'    => array( 'laiproxy up' ),
-				'notes'       => array(
-					__( 'Local development from this repo can also use `npm run up`.', 'mw-local-ai-connector' ),
-				),
+				'commands'    => array( 'sloproxy up' ),
+				'notes'       => array(),
 			),
 		),
 		'mwlai-actual-computer' => array(

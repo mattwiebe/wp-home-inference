@@ -1,7 +1,5 @@
-/local/.env
 /.codex/
 /.claude/
 /dist/
-/node_modules/
 /vendor/
 /.phpunit.result.cache
