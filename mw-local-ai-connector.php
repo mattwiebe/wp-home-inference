@@ -222,7 +222,7 @@ function register_provider(): void {
 		}
 	}
 }
-add_action( 'init', __NAMESPACE__ . '\\register_provider', 5 );
+add_action( 'init', __NAMESPACE__ . '\register_provider', 5 );
 
 /**
  * Allows configured provider requests to bypass wp_safe_remote_request() URL
@@ -241,7 +241,7 @@ function allow_local_ai_safe_remote_requests( array $args, string $url ): array 
 
 	return $args;
 }
-add_filter( 'http_request_args', __NAMESPACE__ . '\\allow_local_ai_safe_remote_requests', 10, 2 );
+add_filter( 'http_request_args', __NAMESPACE__ . '\allow_local_ai_safe_remote_requests', 10, 2 );
 
 /**
  * Whether a URL targets any configured managed provider endpoint.
@@ -352,7 +352,7 @@ function register_connector( $registry ): void {
 		$registry->register( $slug, $connector );
 	}
 }
-add_action( 'wp_connectors_init', __NAMESPACE__ . '\\register_connector' );
+add_action( 'wp_connectors_init', __NAMESPACE__ . '\register_connector' );
 
 // ---------------------------------------------------------------------------
 // Connectors UI — custom render component
@@ -384,7 +384,7 @@ function enqueue_connectors_script( string $hook_suffix ): void {
 
 	wp_enqueue_script_module( 'managed-connectors' );
 }
-add_action( 'admin_enqueue_scripts', __NAMESPACE__ . '\\enqueue_connectors_script' );
+add_action( 'admin_enqueue_scripts', __NAMESPACE__ . '\enqueue_connectors_script' );
 
 /**
  * Provides setup URLs and connection status to the connector script module.
@@ -415,7 +415,7 @@ function connector_script_module_data( array $data ): array {
 
 	return $data;
 }
-add_filter( 'script_module_data_managed-connectors', __NAMESPACE__ . '\\connector_script_module_data' );
+add_filter( 'script_module_data_managed-connectors', __NAMESPACE__ . '\connector_script_module_data' );
 
 // ---------------------------------------------------------------------------
 // Admin settings page assets
@@ -477,7 +477,7 @@ function enqueue_admin_settings_assets( string $hook_suffix ): void {
 		)
 	);
 }
-add_action( 'admin_enqueue_scripts', __NAMESPACE__ . '\\enqueue_admin_settings_assets' );
+add_action( 'admin_enqueue_scripts', __NAMESPACE__ . '\enqueue_admin_settings_assets' );
 
 /**
  * Returns the plugin version from its header.
@@ -522,11 +522,11 @@ function register_settings(): void {
 		$local_ai['endpoint_option'],
 		array(
 			'type'              => 'string',
+			'sanitize_callback' => __NAMESPACE__ . '\sanitize_endpoint_url',
 			'label'             => __( 'Local AI Endpoint URL', 'mw-local-ai-connector' ),
 			'description'       => __( 'The URL of your local inference proxy (for example `http://your-home-ip:13531`).', 'mw-local-ai-connector' ),
 			'default'           => '',
 			'show_in_rest'      => true,
-			'sanitize_callback' => __NAMESPACE__ . '\\sanitize_endpoint_url',
 		)
 	);
 
@@ -535,11 +535,11 @@ function register_settings(): void {
 		$local_ai['api_key_option'],
 		array(
 			'type'              => 'string',
+			'sanitize_callback' => __NAMESPACE__ . '\sanitize_api_key',
 			'label'             => __( 'API Key', 'mw-local-ai-connector' ),
 			'description'       => __( 'The shared secret shown when you start a tunneled local proxy. Leave blank for local-only mode.', 'mw-local-ai-connector' ),
 			'default'           => '',
 			'show_in_rest'      => true,
-			'sanitize_callback' => __NAMESPACE__ . '\\sanitize_api_key',
 		)
 	);
 
@@ -548,11 +548,11 @@ function register_settings(): void {
 		$local_ai['model_option'],
 		array(
 			'type'              => 'string',
+			'sanitize_callback' => __NAMESPACE__ . '\sanitize_local_ai_model_id',
 			'label'             => __( 'Model', 'mw-local-ai-connector' ),
 			'description'       => __( 'The model to use from the Local AI proxy.', 'mw-local-ai-connector' ),
 			'default'           => '',
 			'show_in_rest'      => true,
-			'sanitize_callback' => __NAMESPACE__ . '\\sanitize_local_ai_model_id',
 		)
 	);
 
@@ -561,11 +561,11 @@ function register_settings(): void {
 		$actual['api_key_option'],
 		array(
 			'type'              => 'string',
+			'sanitize_callback' => __NAMESPACE__ . '\sanitize_api_key',
 			'label'             => __( 'API Key', 'mw-local-ai-connector' ),
 			'description'       => __( 'The bearer token issued by Actual Computer.', 'mw-local-ai-connector' ),
 			'default'           => '',
 			'show_in_rest'      => true,
-			'sanitize_callback' => __NAMESPACE__ . '\\sanitize_api_key',
 		)
 	);
 
@@ -574,15 +574,15 @@ function register_settings(): void {
 		$actual['model_option'],
 		array(
 			'type'              => 'string',
+			'sanitize_callback' => __NAMESPACE__ . '\sanitize_actual_computer_model_id',
 			'label'             => __( 'Model', 'mw-local-ai-connector' ),
 			'description'       => __( 'The model to use from Actual Computer.', 'mw-local-ai-connector' ),
 			'default'           => '',
 			'show_in_rest'      => true,
-			'sanitize_callback' => __NAMESPACE__ . '\\sanitize_actual_computer_model_id',
 		)
 	);
 }
-add_action( 'init', __NAMESPACE__ . '\\register_settings', 20 );
+add_action( 'init', __NAMESPACE__ . '\register_settings', 20 );
 
 /**
  * Sanitizes a stored endpoint URL.
@@ -854,7 +854,7 @@ function add_admin_menu(): void {
 		);
 	}
 }
-add_action( 'admin_menu', __NAMESPACE__ . '\\add_admin_menu' );
+add_action( 'admin_menu', __NAMESPACE__ . '\add_admin_menu' );
 
 /**
  * Renders the Local AI settings page.
