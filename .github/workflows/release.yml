@@ -54,9 +54,22 @@ jobs:
           name: mwlai-connector
           path: dist/*
 
+      - name: Deploy to WordPress.org
+        id: wordpress_org_deploy
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: 10up/action-wordpress-plugin-deploy@stable
+        env:
+          SLUG: mwlai-connector
+          SVN_USERNAME: ${{ secrets.SVN_USERNAME }}
+          SVN_PASSWORD: ${{ secrets.SVN_PASSWORD }}
+        with:
+          generate-zip: true
+
       - name: Publish GitHub release asset
         if: startsWith(github.ref, 'refs/tags/')
         uses: softprops/action-gh-release@v3
         with:
           generate_release_notes: true
-          files: dist/*
+          files: |
+            dist/*
+            ${{ steps.wordpress_org_deploy.outputs.zip-path }}

@@ -15,13 +15,16 @@ rsync -a \
 	--exclude '.git' \
 	--exclude '.github' \
 	--exclude '.gitignore' \
+	--exclude '.distignore' \
 	--exclude '.phpunit.result.cache' \
+	--exclude '.wordpress-org' \
 	--exclude '.claude' \
 	--exclude '.codex' \
 	--exclude '.DS_Store' \
 	--exclude 'bin' \
 	--exclude 'composer.*' \
 	--exclude 'dist' \
+	--exclude 'docs' \
 	--exclude 'local' \
 	--exclude 'node_modules' \
 	--exclude 'package*.json' \

@@ -45,14 +45,18 @@ This repository ships with GitHub Actions workflows for:
 - Release packaging on tags matching `v*`:
   - runs PHP verification,
   - builds the WordPress plugin ZIP,
-  - uploads the ZIP to the GitHub release.
+  - deploys the tag to WordPress.org SVN with `10up/action-wordpress-plugin-deploy`,
+  - uploads the locally built ZIP and the WordPress.org-generated ZIP to the GitHub release.
+
+WordPress.org deploys use `.distignore` to exclude development-only files from SVN `trunk`. Plugin-directory assets live in `.wordpress-org`; the deploy action copies that directory to the top-level SVN `assets` directory, so those files are intentionally excluded from the installable plugin package.
 
 To cut a release:
 
 1. Update the plugin header version and `Stable tag` in `readme.txt`.
 2. Create and push a semver tag like `v0.2.0`.
 3. GitHub Actions will build `dist/mwlai-connector-plugin.zip`.
-4. The workflow will attach the ZIP to the GitHub release automatically.
+4. The workflow will deploy the tag to WordPress.org using the `SVN_USERNAME` and `SVN_PASSWORD` repository secrets.
+5. The workflow will attach ZIP assets to the GitHub release automatically.
 
 For Packagist, connect the GitHub repository in Packagist so updates are detected through the Packagist GitHub integration. Reference: [Packagist update hooks](https://packagist.org/about#how-to-update-packages).
 
