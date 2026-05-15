@@ -11,13 +11,19 @@ use Mattwiebe\LocalAiConnector\Metadata\ActualComputerModelMetadataDirectory;
 use Mattwiebe\LocalAiConnector\Metadata\LocalAiModelMetadataDirectory;
 use function Mattwiebe\LocalAiConnector\allow_local_ai_safe_remote_requests;
 use function Mattwiebe\LocalAiConnector\fetch_proxy_models;
+use function Mattwiebe\LocalAiConnector\get_wordpress_ai_ability_model_targets;
+use function Mattwiebe\LocalAiConnector\get_wordpress_ai_feature_id_for_ability;
+use function Mattwiebe\LocalAiConnector\prepend_default_local_ai_text_model;
 use function Mattwiebe\LocalAiConnector\provider_definitions;
 use function Mattwiebe\LocalAiConnector\register_settings;
 use function Mattwiebe\LocalAiConnector\sanitize_api_key;
 use function Mattwiebe\LocalAiConnector\sanitize_actual_computer_model_id;
+use function Mattwiebe\LocalAiConnector\sanitize_ability_model_preferences;
 use function Mattwiebe\LocalAiConnector\sanitize_local_ai_model_id;
 use function Mattwiebe\LocalAiConnector\should_allow_actual_computer_request;
 use function Mattwiebe\LocalAiConnector\should_allow_local_ai_request;
+use function Mattwiebe\LocalAiConnector\wordpress_ai_ability_schema_has_media_markers;
+use function Mattwiebe\LocalAiConnector\wordpress_ai_feature_supports_local_ai_text_models;
 
 final class PluginFunctionsTest extends WP_UnitTestCase {
 
@@ -65,6 +71,203 @@ final class PluginFunctionsTest extends WP_UnitTestCase {
 			$this->assertArrayHasKey( 'sanitize_callback', $wp_registered_settings[ $option ] );
 			$this->assertIsCallable( $wp_registered_settings[ $option ]['sanitize_callback'] );
 		}
+	}
+
+	public function test_wordpress_ai_feature_id_for_ability_derives_registered_features(): void {
+		add_filter(
+			'mwlai_wordpress_ai_feature_metadata',
+			static function (): array {
+				return array(
+					'title-generation'    => array( 'capability' => 'text_generation' ),
+					'review-notes'        => array( 'capability' => 'text_generation' ),
+					'alt-text-generation' => array( 'capability' => 'vision' ),
+				);
+			}
+		);
+
+		$this->assertSame( 'title-generation', get_wordpress_ai_feature_id_for_ability( 'ai/title-generation' ) );
+		$this->assertSame( 'review-notes', get_wordpress_ai_feature_id_for_ability( 'ai/review-notes' ) );
+		$this->assertSame( 'alt-text-generation', get_wordpress_ai_feature_id_for_ability( 'ai/alt-text-generation' ) );
+		$this->assertSame( '', get_wordpress_ai_feature_id_for_ability( 'ai/comment-analysis' ) );
+		$this->assertSame( '', get_wordpress_ai_feature_id_for_ability( 'wordpress/get-site-info' ) );
+
+		remove_all_filters( 'mwlai_wordpress_ai_feature_metadata' );
+	}
+
+	public function test_wordpress_ai_feature_supports_only_text_generation_features(): void {
+		$ability = new class() {
+			public function get_input_schema(): array {
+				return array();
+			}
+
+			public function get_output_schema(): array {
+				return array();
+			}
+		};
+
+		add_filter(
+			'mwlai_wordpress_ai_feature_metadata',
+			static function (): array {
+				return array(
+					'title-generation'    => array( 'capability' => 'text_generation' ),
+					'alt-text-generation' => array( 'capability' => 'vision' ),
+				);
+			}
+		);
+
+		$this->assertTrue( wordpress_ai_feature_supports_local_ai_text_models( 'title-generation', $ability ) );
+		$this->assertFalse( wordpress_ai_feature_supports_local_ai_text_models( 'alt-text-generation', $ability ) );
+
+		remove_all_filters( 'mwlai_wordpress_ai_feature_metadata' );
+	}
+
+	public function test_wordpress_ai_ability_schema_detects_media_markers(): void {
+		$this->assertFalse(
+			wordpress_ai_ability_schema_has_media_markers(
+				array(
+					'type'       => 'object',
+					'properties' => array(
+						'content' => array( 'type' => 'string' ),
+					),
+				)
+			)
+		);
+
+		$this->assertTrue(
+			wordpress_ai_ability_schema_has_media_markers(
+				array(
+					'type'       => 'object',
+					'properties' => array(
+						'image_url' => array( 'type' => 'string' ),
+					),
+				)
+			)
+		);
+	}
+
+	public function test_wordpress_ai_ability_targets_use_active_registered_abilities(): void {
+		if ( ! function_exists( 'wp_register_ability' ) || ! function_exists( 'wp_unregister_ability' ) ) {
+			$this->markTestSkipped( 'The WordPress Abilities API is not available.' );
+		}
+
+		add_filter(
+			'mwlai_wordpress_ai_feature_metadata',
+			static function (): array {
+				return array(
+					'title-generation'    => array( 'capability' => 'text_generation' ),
+					'alt-text-generation' => array( 'capability' => 'vision' ),
+				);
+			}
+		);
+
+		$register_abilities = static function (): void {
+			wp_register_ability(
+				'ai/title-generation',
+				array(
+					'label'               => 'Title Generation',
+					'description'         => 'Generates a title.',
+					'category'            => 'ai',
+					'input_schema'        => array(
+						'type'       => 'object',
+						'properties' => array(
+							'content' => array( 'type' => 'string' ),
+						),
+					),
+					'output_schema'       => array(
+						'type'       => 'object',
+						'properties' => array(
+							'title' => array( 'type' => 'string' ),
+						),
+					),
+					'execute_callback'    => '__return_null',
+					'permission_callback' => '__return_true',
+				)
+			);
+
+			wp_register_ability(
+				'ai/alt-text-generation',
+				array(
+					'label'               => 'Alt Text Generation',
+					'description'         => 'Generates alt text.',
+					'category'            => 'ai',
+					'input_schema'        => array(
+						'type'       => 'object',
+						'properties' => array(
+							'image_url' => array( 'type' => 'string' ),
+						),
+					),
+					'output_schema'       => array(
+						'type'       => 'object',
+						'properties' => array(
+							'alt_text' => array( 'type' => 'string' ),
+						),
+					),
+					'execute_callback'    => '__return_null',
+					'permission_callback' => '__return_true',
+				)
+			);
+		};
+
+		add_action( 'wp_abilities_api_init', $register_abilities );
+		do_action( 'wp_abilities_api_init' );
+		remove_action( 'wp_abilities_api_init', $register_abilities );
+
+		$targets       = get_wordpress_ai_ability_model_targets();
+		$ability_slugs = wp_list_pluck( $targets, 'ability_slug' );
+
+		wp_unregister_ability( 'ai/title-generation' );
+		wp_unregister_ability( 'ai/alt-text-generation' );
+		remove_all_filters( 'mwlai_wordpress_ai_feature_metadata' );
+
+		$this->assertContains( 'ai/title-generation', $ability_slugs );
+		$this->assertNotContains( 'ai/alt-text-generation', $ability_slugs );
+	}
+
+	public function test_sanitize_ability_model_preferences_accepts_only_available_models(): void {
+		$preferences = sanitize_ability_model_preferences(
+			array(
+				'title-generation'   => 'mwlai|qwen2.5',
+				'review-notes'       => 'unknown-model',
+				'content-resizing'   => '',
+				'excerpt-generation' => 'openai|gpt-4.1-mini',
+				'invalid/nested/key' => 'llama3.2',
+			),
+			array( 'llama3.2', 'qwen2.5' )
+		);
+
+		$this->assertSame(
+			array(
+				'title-generation'   => array(
+					'provider' => 'mwlai',
+					'model'    => 'qwen2.5',
+				),
+				'content-resizing' => '',
+				'excerpt-generation' => array(
+					'provider' => 'openai',
+					'model'    => 'gpt-4.1-mini',
+				),
+			),
+			$preferences
+		);
+	}
+
+	public function test_default_local_ai_model_is_prepended_to_text_preferences(): void {
+		update_option( 'mwlai_model_id', 'qwen2.5' );
+
+		$preferences = prepend_default_local_ai_text_model(
+			array(
+				array( 'openai', 'gpt-4.1-mini' ),
+				array( 'mwlai', 'qwen2.5' ),
+			)
+		);
+
+		$this->assertSame(
+			array(
+				array( 'mwlai', 'qwen2.5' ),
+				array( 'openai', 'gpt-4.1-mini' ),
+			),
+			$preferences
+		);
 	}
 
 	public function test_fetch_proxy_models_returns_ids_from_valid_response(): void {
@@ -299,6 +502,38 @@ final class PluginFunctionsTest extends WP_UnitTestCase {
 		update_option( 'mwlai_model_id', 'missing-model' );
 
 		$directory = new LocalAiModelMetadataDirectory();
+		$reflection = new \ReflectionMethod( $directory, 'parseResponseToModelMetadataList' );
+		$reflection->setAccessible( true );
+
+		$response = new Response(
+			200,
+			array(
+				'content-type' => 'application/json',
+			),
+			wp_json_encode(
+				array(
+					'data' => array(
+						array( 'id' => 'llama3.2' ),
+						array( 'id' => 'qwen2.5' ),
+					),
+				)
+			)
+		);
+
+		$models = $reflection->invoke( $directory, $response );
+
+		$this->assertCount( 2, $models );
+		$this->assertSame( array( 'llama3.2', 'qwen2.5' ), wp_list_pluck( $models, 'id' ) );
+	}
+
+	public function test_model_directory_exposes_all_available_models_when_default_model_is_selected(): void {
+		if ( ! class_exists( \WordPress\AiClient\Providers\OpenAiCompatibleImplementation\AbstractOpenAiCompatibleModelMetadataDirectory::class ) ) {
+			$this->markTestSkipped( 'WordPress AI Client model metadata directory classes are not available in this test environment.' );
+		}
+
+		update_option( 'mwlai_model_id', 'qwen2.5' );
+
+		$directory  = new LocalAiModelMetadataDirectory();
 		$reflection = new \ReflectionMethod( $directory, 'parseResponseToModelMetadataList' );
 		$reflection->setAccessible( true );
 

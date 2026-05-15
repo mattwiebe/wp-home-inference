@@ -31,16 +31,15 @@ class LocalAiModelMetadataDirectory extends AbstractOpenAiCompatibleModelMetadat
 	/**
 	 * {@inheritDoc}
 	 *
-	 * Include the current endpoint and selected model in the cache key so model
-	 * selection changes do not leave stale filtered metadata behind.
+	 * Include the current endpoint in the cache key so connection changes do not
+	 * leave stale filtered metadata behind.
 	 *
 	 * @since 0.1.0
 	 */
 	protected function getBaseCacheKey(): string {
 		$endpoint_url = untrailingslashit( (string) get_option( 'mwlai_endpoint_url', '' ) );
-		$selected_model_id = (string) get_option( 'mwlai_model_id', '' );
 
-		return parent::getBaseCacheKey() . '_' . md5( $endpoint_url . '|' . $selected_model_id );
+		return parent::getBaseCacheKey() . '_' . md5( $endpoint_url );
 	}
 
 	/**
@@ -97,8 +96,6 @@ class LocalAiModelMetadataDirectory extends AbstractOpenAiCompatibleModelMetadat
 		);
 
 		$models = array();
-		$matched_models = array();
-		$selected_model_id = trim( (string) get_option( 'mwlai_model_id', '' ) );
 
 		foreach ( (array) $responseData['data'] as $model_data ) {
 			if ( ! is_array( $model_data ) || ! isset( $model_data['id'] ) ) {
@@ -113,14 +110,6 @@ class LocalAiModelMetadataDirectory extends AbstractOpenAiCompatibleModelMetadat
 			);
 
 			$models[] = $model;
-
-			if ( '' !== $selected_model_id && $selected_model_id === $model_data['id'] ) {
-				$matched_models[] = $model;
-			}
-		}
-
-		if ( '' !== $selected_model_id && ! empty( $matched_models ) ) {
-			return $matched_models;
 		}
 
 		return $models;

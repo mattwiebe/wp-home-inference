@@ -22,3 +22,18 @@
 .mwlai-copy:active {
 	opacity: 1;
 }
+
+.mwlai-ability-models {
+	max-width: 1100px;
+}
+
+.mwlai-ability-models code {
+	display: block;
+	width: max-content;
+	margin-top: 4px;
+}
+
+.mwlai-ability-models select {
+	width: 100%;
+	max-width: 340px;
+}

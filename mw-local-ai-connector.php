@@ -87,7 +87,7 @@ function provider_definitions(): array {
 			'endpoint_description'  => __( 'The URL of your Local AI proxy.', 'mw-local-ai-connector' ),
 			'endpoint_placeholder'  => 'https://your-proxy.example.com',
 			'api_key_description'   => __( 'Required for Tailscale Funnel or Cloudflare Tunnel. Leave blank for local-only proxy mode.', 'mw-local-ai-connector' ),
-			'model_description'     => __( 'Loaded live from the proxy /v1/models endpoint. The selected model will be the one exposed by this connector.', 'mw-local-ai-connector' ),
+			'model_description'     => __( 'Loaded live from the proxy /v1/models endpoint. The default model is preferred for text generation unless an ability-specific model below overrides it.', 'mw-local-ai-connector' ),
 			'model_invalid_message' => __( 'The selected model is not available from the Local AI proxy.', 'mw-local-ai-connector' ),
 			'setup'                 => array(
 				'heading'      => __( 'Setup', 'mw-local-ai-connector' ),
@@ -223,6 +223,42 @@ function register_provider(): void {
 	}
 }
 add_action( 'init', __NAMESPACE__ . '\register_provider', 5 );
+
+/**
+ * Prepends the selected Local AI model to WordPress AI's default text model
+ * preferences.
+ *
+ * Per-ability model settings can still override this default through the
+ * WordPress AI developer model configuration options.
+ *
+ * @since 0.7.0
+ *
+ * @param array<int, array{string, string}> $preferred_models Preferred provider/model pairs.
+ * @return array<int, array{string, string}>
+ */
+function prepend_default_local_ai_text_model( array $preferred_models ): array {
+	$model_id = trim( (string) get_option( 'mwlai_model_id', '' ) );
+	if ( '' === $model_id ) {
+		return $preferred_models;
+	}
+
+	$filtered_models = array();
+	foreach ( $preferred_models as $preferred_model ) {
+		if (
+			! is_array( $preferred_model )
+			|| count( $preferred_model ) < 2
+			|| 'mwlai' !== (string) $preferred_model[0]
+			|| $model_id !== (string) $preferred_model[1]
+		) {
+			$filtered_models[] = $preferred_model;
+		}
+	}
+
+	array_unshift( $filtered_models, array( 'mwlai', $model_id ) );
+
+	return $filtered_models;
+}
+add_filter( 'wpai_preferred_text_models', __NAMESPACE__ . '\prepend_default_local_ai_text_model' );
 
 /**
  * Allows configured provider requests to bypass wp_safe_remote_request() URL
@@ -549,8 +585,8 @@ function register_settings(): void {
 		array(
 			'type'              => 'string',
 			'sanitize_callback' => __NAMESPACE__ . '\sanitize_local_ai_model_id',
-			'label'             => __( 'Model', 'mw-local-ai-connector' ),
-			'description'       => __( 'The model to use from the Local AI proxy.', 'mw-local-ai-connector' ),
+			'label'             => __( 'Default Model', 'mw-local-ai-connector' ),
+			'description'       => __( 'The default model to prefer from the Local AI proxy.', 'mw-local-ai-connector' ),
 			'default'           => '',
 			'show_in_rest'      => true,
 		)
@@ -583,6 +619,346 @@ function register_settings(): void {
 	);
 }
 add_action( 'init', __NAMESPACE__ . '\register_settings', 20 );
+
+/**
+ * Returns whether the current request is the Local AI settings admin screen.
+ *
+ * @since 0.7.0
+ *
+ * @return bool Whether this is the Local AI settings admin screen.
+ */
+function is_local_ai_settings_admin_screen(): bool {
+	if ( ! is_admin() ) {
+		return false;
+	}
+
+	if ( function_exists( 'get_current_screen' ) ) {
+		$screen = get_current_screen();
+		if ( $screen && 'settings_page_mwlai' === $screen->id ) {
+			return true;
+		}
+	}
+
+	$page = '';
+	if ( isset( $_GET['page'] ) ) {
+		$raw_page = wp_unslash( $_GET['page'] );
+		$page     = is_scalar( $raw_page ) ? sanitize_key( $raw_page ) : '';
+	}
+	if ( 'mwlai' !== $page ) {
+		return false;
+	}
+
+	global $pagenow;
+	return ! isset( $pagenow ) || 'options-general.php' === $pagenow;
+}
+
+/**
+ * Caches WordPress AI feature metadata as features are registered.
+ *
+ * @since 0.7.0
+ *
+ * @param object $registry WordPress AI feature registry.
+ */
+function cache_wordpress_ai_feature_metadata( $registry ): void {
+	if ( ! is_local_ai_settings_admin_screen() ) {
+		return;
+	}
+
+	if ( ! is_object( $registry ) || ! method_exists( $registry, 'get_all_features' ) ) {
+		return;
+	}
+
+	$features = $registry->get_all_features();
+	if ( ! is_array( $features ) ) {
+		return;
+	}
+
+	$metadata = array();
+	foreach ( $features as $feature ) {
+		if ( ! is_object( $feature ) || ! method_exists( $feature, 'get_id' ) ) {
+			continue;
+		}
+
+		$feature_id = (string) $feature::get_id();
+		if ( '' === $feature_id ) {
+			continue;
+		}
+
+		$metadata[ $feature_id ] = array(
+			'label'      => method_exists( $feature, 'get_label' ) ? (string) $feature->get_label() : $feature_id,
+			'capability' => method_exists( $feature, 'get_capability' ) ? (string) $feature->get_capability() : 'text_generation',
+		);
+	}
+
+	$GLOBALS['mwlai_wordpress_ai_feature_metadata'] = $metadata;
+}
+add_action( 'wpai_register_features', __NAMESPACE__ . '\cache_wordpress_ai_feature_metadata', PHP_INT_MAX );
+
+/**
+ * Returns cached WordPress AI feature metadata.
+ *
+ * @since 0.7.0
+ *
+ * @return array<string, array{label?: string, capability?: string}>
+ */
+function get_wordpress_ai_feature_metadata(): array {
+	$metadata = $GLOBALS['mwlai_wordpress_ai_feature_metadata'] ?? array();
+	if ( ! is_array( $metadata ) ) {
+		$metadata = array();
+	}
+
+	/**
+	 * Filters cached WordPress AI feature metadata.
+	 *
+	 * @since 0.7.0
+	 *
+	 * @param array<string, array{label?: string, capability?: string}> $metadata Feature metadata keyed by feature ID.
+	 */
+	return (array) apply_filters( 'mwlai_wordpress_ai_feature_metadata', $metadata );
+}
+
+/**
+ * Returns whether WordPress AI registered a developer model setting for a feature.
+ *
+ * @since 0.7.0
+ *
+ * @param string $feature_id WordPress AI feature ID.
+ * @return bool Whether the developer model config setting is registered.
+ */
+function is_wordpress_ai_developer_model_config_registered( string $feature_id ): bool {
+	global $wp_registered_settings;
+
+	return isset( $wp_registered_settings[ "wpai_feature_{$feature_id}_field_developer" ] );
+}
+
+/**
+ * Returns the WordPress AI feature ID controlled by a registered ability.
+ *
+ * WordPress AI stores developer model overrides per feature, not per ability.
+ * Ability Explorer can list abilities directly; this derives the matching
+ * feature dynamically for abilities whose `ai/{feature-id}` slug matches a
+ * registered WordPress AI feature.
+ *
+ * @since 0.7.0
+ *
+ * @param string $ability_slug Ability slug, for example `ai/title-generation`.
+ * @return string Feature ID, or an empty string when no developer model config is supported.
+ */
+function get_wordpress_ai_feature_id_for_ability( string $ability_slug ): string {
+	$feature_id = '';
+
+	if ( 0 === strpos( $ability_slug, 'ai/' ) ) {
+		$candidate = substr( $ability_slug, 3 );
+		if ( '' !== $candidate && sanitize_key( $candidate ) === $candidate ) {
+			$metadata = get_wordpress_ai_feature_metadata();
+			if ( isset( $metadata[ $candidate ] ) || is_wordpress_ai_developer_model_config_registered( $candidate ) ) {
+				$feature_id = $candidate;
+			}
+		}
+	}
+
+	/**
+	 * Filters the WordPress AI feature ID associated with an ability.
+	 *
+	 * @since 0.7.0
+	 *
+	 * @param string $feature_id   Feature ID, or an empty string when unsupported.
+	 * @param string $ability_slug Ability slug.
+	 */
+	return (string) apply_filters( 'mwlai_wordpress_ai_feature_id_for_ability', $feature_id, $ability_slug );
+}
+
+/**
+ * Returns whether a JSON schema has media/image-oriented model markers.
+ *
+ * @since 0.7.0
+ *
+ * @param array<string, mixed> $schema Ability JSON schema.
+ * @return bool Whether the schema appears to require image/media model support.
+ */
+function wordpress_ai_ability_schema_has_media_markers( array $schema ): bool {
+	$media_keys = array(
+		'attachment_id',
+		'image',
+		'images',
+		'image_id',
+		'image_ids',
+		'image_meta',
+		'image_url',
+		'mime_type',
+		'reference',
+	);
+
+	foreach ( $schema as $key => $value ) {
+		$key = strtolower( (string) $key );
+		if ( in_array( $key, $media_keys, true ) ) {
+			return true;
+		}
+
+		if ( is_array( $value ) && wordpress_ai_ability_schema_has_media_markers( $value ) ) {
+			return true;
+		}
+	}
+
+	return false;
+}
+
+/**
+ * Returns whether a WordPress AI feature can use Local AI text model choices.
+ *
+ * @since 0.7.0
+ *
+ * @param string $feature_id WordPress AI feature ID.
+ * @param object $ability    Registered WordPress Ability object.
+ * @return bool Whether to show Local AI text model preferences for the feature.
+ */
+function wordpress_ai_feature_supports_local_ai_text_models( string $feature_id, $ability ): bool {
+	$metadata   = get_wordpress_ai_feature_metadata();
+	$capability = $metadata[ $feature_id ]['capability'] ?? null;
+
+	if ( is_string( $capability ) && '' !== $capability ) {
+		$supports = 'text_generation' === $capability;
+	} elseif ( is_object( $ability ) && method_exists( $ability, 'get_input_schema' ) && method_exists( $ability, 'get_output_schema' ) ) {
+		$input_schema  = $ability->get_input_schema();
+		$output_schema = $ability->get_output_schema();
+		$supports      = is_array( $input_schema ) && is_array( $output_schema )
+			&& ! wordpress_ai_ability_schema_has_media_markers( $input_schema )
+			&& ! wordpress_ai_ability_schema_has_media_markers( $output_schema );
+	} else {
+		$supports = true;
+	}
+
+	/**
+	 * Filters whether a WordPress AI feature should show Local AI text model preferences.
+	 *
+	 * @since 0.7.0
+	 *
+	 * @param bool   $supports   Whether Local AI text model preferences are supported.
+	 * @param string $feature_id WordPress AI feature ID.
+	 * @param object $ability    Registered WordPress Ability object.
+	 */
+	return (bool) apply_filters( 'mwlai_wordpress_ai_feature_supports_local_ai_text_models', $supports, $feature_id, $ability );
+}
+
+/**
+ * Returns AI ability targets that support WordPress AI developer model config.
+ *
+ * @since 0.7.0
+ *
+ * @return list<array{
+ *     ability_slug: string,
+ *     feature_id: string,
+ *     label: string,
+ *     description: string,
+ *     category: string
+ * }>
+ */
+function get_wordpress_ai_ability_model_targets(): array {
+	if ( ! function_exists( 'wp_get_abilities' ) ) {
+		return array();
+	}
+
+	$abilities = wp_get_abilities();
+	if ( ! is_array( $abilities ) || empty( $abilities ) ) {
+		return array();
+	}
+
+	$targets = array();
+	foreach ( $abilities as $ability ) {
+		if ( ! is_object( $ability ) || ! method_exists( $ability, 'get_name' ) ) {
+			continue;
+		}
+
+		$ability_slug = (string) $ability->get_name();
+		$feature_id   = get_wordpress_ai_feature_id_for_ability( $ability_slug );
+		if ( '' === $feature_id ) {
+			continue;
+		}
+
+		if ( ! wordpress_ai_feature_supports_local_ai_text_models( $feature_id, $ability ) ) {
+			continue;
+		}
+
+		$targets[] = array(
+			'ability_slug' => $ability_slug,
+			'feature_id'   => $feature_id,
+			'label'        => method_exists( $ability, 'get_label' ) ? (string) $ability->get_label() : $ability_slug,
+			'description'  => method_exists( $ability, 'get_description' ) ? (string) $ability->get_description() : '',
+			'category'     => method_exists( $ability, 'get_category' ) ? (string) $ability->get_category() : '',
+		);
+	}
+
+	usort(
+		$targets,
+		static function ( array $a, array $b ): int {
+			return strcasecmp( $a['label'], $b['label'] );
+		}
+	);
+
+	return $targets;
+}
+
+/**
+ * Sanitizes submitted model preferences for WordPress AI feature overrides.
+ *
+ * @since 0.7.0
+ *
+ * @param mixed        $value           Raw submitted model preferences.
+ * @param list<string> $valid_model_ids Model IDs returned by the Local AI proxy.
+ * @return array<string, array{provider: string, model: string}|string> Feature IDs keyed to selected provider/model configs. Empty string clears a preference.
+ */
+function sanitize_ability_model_preferences( $value, array $valid_model_ids ): array {
+	if ( ! is_array( $value ) ) {
+		return array();
+	}
+
+	$preferences = array();
+	foreach ( $value as $feature_id => $model_id ) {
+		if ( ! is_scalar( $feature_id ) || ! is_scalar( $model_id ) ) {
+			continue;
+		}
+
+		$raw_feature_id = trim( (string) $feature_id );
+		$feature_id     = sanitize_key( $raw_feature_id );
+		if ( '' === $feature_id || $feature_id !== $raw_feature_id ) {
+			continue;
+		}
+
+		$model_id = sanitize_text_field( trim( (string) $model_id ) );
+		if ( '' === $model_id ) {
+			$preferences[ $feature_id ] = '';
+			continue;
+		}
+
+		$model_parts = explode( '|', $model_id, 2 );
+		if ( 2 !== count( $model_parts ) ) {
+			continue;
+		}
+
+		$provider_slug = sanitize_key( $model_parts[0] );
+		$model_id      = sanitize_text_field( trim( $model_parts[1] ) );
+		if ( '' === $provider_slug || '' === $model_id ) {
+			continue;
+		}
+
+		if ( 'mwlai' === $provider_slug && in_array( $model_id, $valid_model_ids, true ) ) {
+			$preferences[ $feature_id ] = array(
+				'provider' => 'mwlai',
+				'model'    => $model_id,
+			);
+			continue;
+		}
+
+		if ( 'mwlai' !== $provider_slug ) {
+			$preferences[ $feature_id ] = array(
+				'provider' => $provider_slug,
+				'model'    => $model_id,
+			);
+		}
+	}
+
+	return $preferences;
+}
 
 /**
  * Sanitizes a stored endpoint URL.
@@ -832,6 +1208,84 @@ function fetch_proxy_models( string $endpoint_url, string $api_key ) {
 	return $models;
 }
 
+/**
+ * Handles saving Local AI model preferences for WordPress AI abilities.
+ *
+ * @since 0.7.0
+ */
+function handle_save_ability_model_preferences(): void {
+	if ( ! current_user_can( 'manage_options' ) ) {
+		wp_die( esc_html__( 'You do not have permission to manage Local AI settings.', 'mw-local-ai-connector' ) );
+	}
+
+	check_admin_referer( 'mwlai_ability_model_preferences' );
+
+	$provider      = get_provider_definition( 'mwlai' );
+	$connection    = get_saved_connection_details_for_provider( 'mwlai' );
+	$redirect_url  = add_query_arg(
+		array(
+			'page'             => $provider['admin_page'],
+			'settings-updated' => 'true',
+		),
+		admin_url( 'options-general.php' )
+	);
+	$models        = fetch_proxy_models( $connection['endpoint_url'], $connection['api_key'] );
+	$setting_group = 'mwlai_ability_model_preferences';
+
+	if ( is_wp_error( $models ) ) {
+		add_settings_error(
+			$setting_group,
+			'mwlai_ability_models_unavailable',
+			$models->get_error_message()
+		);
+		set_transient( 'settings_errors', get_settings_errors(), 30 );
+		wp_safe_redirect( $redirect_url );
+		exit;
+	}
+
+	$valid_model_ids = wp_list_pluck( $models, 'id' );
+	$raw_preferences = isset( $_POST['mwlai_ability_model_preferences'] )
+		? wp_unslash( $_POST['mwlai_ability_model_preferences'] )
+		: array();
+	$preferences     = sanitize_ability_model_preferences( $raw_preferences, $valid_model_ids );
+	$targets         = get_wordpress_ai_ability_model_targets();
+
+	foreach ( $targets as $target ) {
+		$feature_id  = $target['feature_id'];
+		$option_name = 'wpai_feature_' . $feature_id . '_field_developer';
+		$preference  = $preferences[ $feature_id ] ?? null;
+		$config      = get_option( $option_name, array() );
+		$provider    = is_array( $config ) ? (string) ( $config['provider'] ?? '' ) : '';
+
+		if ( '' === $preference ) {
+			delete_option( $option_name );
+			continue;
+		}
+
+		if ( ! is_array( $preference ) || empty( $preference['provider'] ) || empty( $preference['model'] ) ) {
+			continue;
+		}
+
+		if ( 'mwlai' !== $preference['provider'] && $provider === $preference['provider'] ) {
+			continue;
+		}
+
+		update_option( $option_name, $preference );
+	}
+
+	add_settings_error(
+		$setting_group,
+		'mwlai_ability_models_saved',
+		__( 'Saved WordPress AI ability model preferences.', 'mw-local-ai-connector' ),
+		'updated'
+	);
+	set_transient( 'settings_errors', get_settings_errors(), 30 );
+
+	wp_safe_redirect( $redirect_url );
+	exit;
+}
+add_action( 'admin_post_mwlai_save_ability_model_preferences', __NAMESPACE__ . '\handle_save_ability_model_preferences' );
+
 // ---------------------------------------------------------------------------
 // Admin pages
 // ---------------------------------------------------------------------------
@@ -893,6 +1347,7 @@ function render_provider_admin_page( string $slug ): void {
 	?>
 	<div class="wrap">
 		<h1><?php echo esc_html( $provider['name'] ); ?></h1>
+		<?php settings_errors(); ?>
 
 		<?php if ( ! $is_configured ) : ?>
 			<div class="card" style="max-width: 720px;">
@@ -956,7 +1411,9 @@ function render_provider_admin_page( string $slug ): void {
 				</tr>
 				<tr>
 					<th scope="row">
-						<label for="<?php echo esc_attr( $provider['model_option'] ); ?>"><?php esc_html_e( 'Model', 'mw-local-ai-connector' ); ?></label>
+						<label for="<?php echo esc_attr( $provider['model_option'] ); ?>">
+							<?php echo esc_html( 'mwlai' === $slug ? __( 'Default model', 'mw-local-ai-connector' ) : __( 'Model', 'mw-local-ai-connector' ) ); ?>
+						</label>
 					</th>
 					<td>
 						<select
@@ -965,7 +1422,7 @@ function render_provider_admin_page( string $slug ): void {
 							class="regular-text"
 							<?php disabled( ! $is_configured || is_wp_error( $models ) ); ?>
 						>
-							<option value=""><?php esc_html_e( 'Automatic (first compatible model)', 'mw-local-ai-connector' ); ?></option>
+							<option value=""><?php esc_html_e( 'Automatic (WordPress AI defaults)', 'mw-local-ai-connector' ); ?></option>
 							<?php if ( ! is_wp_error( $models ) ) : ?>
 								<?php foreach ( $models as $model ) : ?>
 									<option value="<?php echo esc_attr( $model['id'] ); ?>" <?php selected( $model_id, $model['id'] ); ?>>
@@ -987,6 +1444,10 @@ function render_provider_admin_page( string $slug ): void {
 			<?php submit_button(); ?>
 		</form>
 
+		<?php if ( 'mwlai' === $slug && $is_configured && ! is_wp_error( $models ) ) : ?>
+			<?php render_ability_model_preferences( $models ); ?>
+		<?php endif; ?>
+
 		<?php if ( $is_configured && ! empty( $provider['info_card'] ) ) : ?>
 			<div class="card" style="max-width: 720px;">
 				<h2><?php echo esc_html( $provider['info_card']['heading'] ); ?></h2>
@@ -1000,6 +1461,95 @@ function render_provider_admin_page( string $slug ): void {
 			</div>
 		<?php endif; ?>
 	</div>
+	<?php
+}
+
+/**
+ * Renders per-ability model preferences for WordPress AI.
+ *
+ * @since 0.7.0
+ *
+ * @param list<array{id: string, owned_by?: string}> $models Available Local AI models.
+ */
+function render_ability_model_preferences( array $models ): void {
+	$targets = get_wordpress_ai_ability_model_targets();
+
+	?>
+	<hr>
+	<h2><?php esc_html_e( 'WordPress AI ability model preferences', 'mw-local-ai-connector' ); ?></h2>
+	<p>
+		<?php esc_html_e( 'Choose which Local AI model WordPress AI should prefer for each model-configurable ability. Leave an ability on Automatic to use the default model preference order.', 'mw-local-ai-connector' ); ?>
+	</p>
+
+	<?php if ( ! function_exists( 'wp_get_abilities' ) ) : ?>
+		<p class="description"><?php esc_html_e( 'The WordPress Abilities API is not available, so ability preferences cannot be shown yet.', 'mw-local-ai-connector' ); ?></p>
+		<?php return; ?>
+	<?php endif; ?>
+
+	<?php if ( empty( $targets ) ) : ?>
+		<p class="description"><?php esc_html_e( 'No WordPress AI abilities with developer model configuration are currently registered.', 'mw-local-ai-connector' ); ?></p>
+		<?php return; ?>
+	<?php endif; ?>
+
+	<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>">
+		<input type="hidden" name="action" value="mwlai_save_ability_model_preferences">
+		<?php wp_nonce_field( 'mwlai_ability_model_preferences' ); ?>
+
+		<table class="widefat striped mwlai-ability-models">
+			<thead>
+				<tr>
+					<th scope="col"><?php esc_html_e( 'Ability', 'mw-local-ai-connector' ); ?></th>
+					<th scope="col"><?php esc_html_e( 'Category', 'mw-local-ai-connector' ); ?></th>
+					<th scope="col"><?php esc_html_e( 'Preferred local model', 'mw-local-ai-connector' ); ?></th>
+				</tr>
+			</thead>
+			<tbody>
+				<?php foreach ( $targets as $target ) : ?>
+					<?php
+					$option_name = 'wpai_feature_' . $target['feature_id'] . '_field_developer';
+					$config      = get_option( $option_name, array() );
+					$provider    = is_array( $config ) ? (string) ( $config['provider'] ?? '' ) : '';
+					$model_id    = is_array( $config ) ? (string) ( $config['model'] ?? '' ) : '';
+					$selected    = '' !== $provider && '' !== $model_id ? $provider . '|' . $model_id : '';
+					?>
+					<tr>
+						<td>
+							<strong><?php echo esc_html( $target['label'] ); ?></strong>
+							<code><?php echo esc_html( $target['ability_slug'] ); ?></code>
+							<?php if ( '' !== $target['description'] ) : ?>
+								<p class="description"><?php echo esc_html( $target['description'] ); ?></p>
+							<?php endif; ?>
+						</td>
+						<td><?php echo esc_html( $target['category'] ?: __( 'Other', 'mw-local-ai-connector' ) ); ?></td>
+						<td>
+							<select name="mwlai_ability_model_preferences[<?php echo esc_attr( $target['feature_id'] ); ?>]">
+								<option value=""><?php esc_html_e( 'Automatic', 'mw-local-ai-connector' ); ?></option>
+								<?php if ( '' !== $provider && 'mwlai' !== $provider && '' !== $model_id ) : ?>
+									<option value="<?php echo esc_attr( $provider . '|' . $model_id ); ?>" <?php selected( $selected, $provider . '|' . $model_id ); ?>>
+										<?php
+										printf(
+											/* translators: 1: provider slug. 2: model ID. */
+											esc_html__( 'Existing: %1$s / %2$s', 'mw-local-ai-connector' ),
+											esc_html( $provider ),
+											esc_html( $model_id )
+										);
+										?>
+									</option>
+								<?php endif; ?>
+								<?php foreach ( $models as $model ) : ?>
+									<option value="<?php echo esc_attr( 'mwlai|' . $model['id'] ); ?>" <?php selected( $selected, 'mwlai|' . $model['id'] ); ?>>
+										<?php echo esc_html( $model['id'] ); ?>
+									</option>
+								<?php endforeach; ?>
+							</select>
+						</td>
+					</tr>
+				<?php endforeach; ?>
+			</tbody>
+		</table>
+
+		<?php submit_button( __( 'Save ability model preferences', 'mw-local-ai-connector' ) ); ?>
+	</form>
 	<?php
 }
 
